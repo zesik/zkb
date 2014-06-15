@@ -137,12 +137,13 @@ class SiteBuilder(object):
                 body, base=full_path, url=config.url)
             article_config.update(meta)
             # Add date object
-            if len(article_config.date) == 0:
-                article_config.date = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(full_path))
-            else:
-                article_config.date = datetime.datetime.strptime(
-                    article_config.date, config.date_format)
+            if not isinstance(article_config.date, datetime.date):
+                if len(article_config.date) == 0:
+                    article_config.date = datetime.datetime.fromtimestamp(
+                        os.path.getmtime(full_path))
+                else:
+                    article_config.date = datetime.datetime.strptime(
+                        article_config.date, config.date_format)
             # Add slug info
             if len(article_config.slug) == 0:
                 article_config.slug = slugify(article_config.title)
