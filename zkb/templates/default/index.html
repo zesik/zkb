@@ -1,0 +1,31 @@
+{% include 'header.html' %}
+
+    <div class="main-column column article-list">
+      {% for article in articles %}
+      <article class="lang-{{ article.language }}">
+        <header>
+          <h1><a href="{{ article.destination_url }}">{{ article.title }}</a></h1>
+          <p class="meta"><time datetime="{{ article.date | date('short') }}">{{ article.date | date }}</time></p>
+        </header>
+        {{ article.content_html | safe }}
+      </article>
+      {% endfor %}
+
+      <p class="pagination">
+        {% if prev_url | length != 0 %}
+        <a class="newer" href="{{ prev_url }}">
+          &laquo; Newer
+        </a>
+        {% endif %}
+        <a class="archive" href="{{ site.url }}archive">
+          Archive
+        </a>
+        {% if next_url | length != 0 %}
+        <a class="older" href="{{ next_url }}">
+          Older &raquo;
+        </a>
+        {% endif %}
+      </p>
+    </div>
+
+{% include 'footer.html' %}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ page_title }}</title>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href='//fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  {% if site.enable_font_awesome %}
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+  {% endif %}
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}stylesheets/style.css">
+  <link rel="stylesheet" type="text/css" href="{{ site.url }}stylesheets/codeblock.css">
+  {% if header_scripts is defined %}
+  {% for script in header_scripts %}
+  {{ script | safe }}
+  {% endfor %}
+  {% endif %}
+</head>
+
+<body class="lang-{{ site.language }}">
+
+<div class="header-image header-image-background"></div>
+
+<div class="page-header">
+  <div class="content-container">
+    <div class="hero align-middle"><!--
+    --><header class="align-block">
+        <h1><a href="{{ site.url }}">{{ site.title }}</a></h1>
+        <h3>{{ site.subtitle }}</h3>
+      </header>
+    </div>
+  </div>
+</div>
+
+<div class="nav-container">
+  <div class="header-image nav-header-image-overlay"></div>
+  <div class="content-container">
+    <div class="column">
+      <ul class="nav main-nav">
+        <li><a href="{{ site.url }}">Home</a></li>
+        <li><a href="{{ site.url }}tags">Tags</a></li>
+        <li><a href="{{ site.url }}archive">Archive</a></li>
+        {% if site.about_url | length != 0 %}
+        <li><a href="{{ site.about_url }}">About</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="content-container">

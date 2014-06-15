@@ -1,0 +1,22 @@
+{% include 'header.html' %}
+
+    <div class="main-column column article-body">
+      <article>
+        <header>
+          <h1>{{ title }}</h1>
+        </header>
+        <p>
+          {% if site.articles_by_tag | length == 0 %}
+            No tags.
+          {% else %}
+          {% for tag, articles in site.articles_by_tag.iteritems() %}
+            <a href="{{ site.url }}tags/{{ tag | safe_url }}/">{{ tag }}
+            ({{ articles | count }})</a>{% if not loop.last %},{% endif %}
+          {% endfor %}
+          {% endif %}
+        </p>
+      </article>
+
+    </div>
+
+{% include 'footer.html' %}
