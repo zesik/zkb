@@ -122,6 +122,9 @@ class SiteBuilder(object):
                 reader = HeaderedContentReader.from_type(header_type)
                 header, body = reader.read(stream)
             article_config = ArticleConfig(config, header)
+            # Check for draft flag
+            if article_config.draft:
+                continue
             article_config.filename = full_path
             article_config.header_type = header_type
             if len(article_config.title) == 0:
