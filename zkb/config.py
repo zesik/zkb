@@ -241,6 +241,7 @@ class SiteConfig(ConfigBase):
             self.output_dir += os.sep
 
 
+
 class ArticleConfig(ConfigBase):
     """Represents config for articles."""
 
@@ -261,6 +262,10 @@ class ArticleConfig(ConfigBase):
     _email = ConfigItem(
         '',
         'Email of article\'s author.',
+        ConfigItem.PRIVATE)
+    _draft = ConfigItem(
+        False,
+        'Whether the article is a draft and is not ready for publishing.',
         ConfigItem.PRIVATE)
     _slug = ConfigItem(
         '',
@@ -347,6 +352,7 @@ class ArticleConfig(ConfigBase):
         self.title = ArticleConfig._title.default
         self.author = ArticleConfig._author.default
         self.email = ArticleConfig._email.default
+        self.draft = ArticleConfig._draft.default
         self.slug = ArticleConfig._slug.default
         self.tags = ArticleConfig._tags.default
         self.enable_comments = ArticleConfig._enable_comments.default
