@@ -111,9 +111,9 @@ def deploy(args):
     out_dir = os.path.realpath(config.output_dir)
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if args.force:
-        push_command = 'git push --force origin %s'
+        push_command = 'git push -u --force origin %s'
     else:
-        push_command = 'git push origin %s'
+        push_command = 'git push -u origin %s'
     subprocess.call('git add --all', shell=True, cwd=src_dir)
     subprocess.call('git commit -m \"Commit of %s\"' % date,
                     shell=True, cwd=src_dir)
