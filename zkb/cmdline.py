@@ -23,7 +23,7 @@ from zkb.config import SiteConfig
 from zkb.log import logger
 
 
-_DEFAULT_CONFIG_FILE = 'config.yml'
+_DEFAULT_CONFIG_FILE = '_config.yml'
 _ADDRESS = 'localhost'
 _PORT = 8900
 
