@@ -114,6 +114,10 @@ class SiteConfig(ConfigBase):
         'Email address of the author. This setting can be overwritten in each '
         'article.',
         ConfigItem.NORMAL)
+    _show_search_box = ConfigItem(
+        True,
+        'Whether a search box should be shown.',
+        ConfigItem.NORMAL)
     _article_encoding = ConfigItem(
         DEFAULT_ENCODING,
         'Default encoding of article source files. This setting can be '
@@ -204,6 +208,7 @@ class SiteConfig(ConfigBase):
         self.git_remote = SiteConfig._git_remote.default
         self.author = SiteConfig._author.default
         self.email = SiteConfig._email.default
+        self.show_search_box = SiteConfig._show_search_box.default
         self.article_encoding = SiteConfig._article_encoding.default
         self.enable_latex = SiteConfig._enable_latex.default
         self.enable_comments = SiteConfig._enable_comments.default
