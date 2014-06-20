@@ -171,6 +171,10 @@ i.fa {
   padding-right: 1.2em;
 }
 
+.nav-icon {
+  display: none;
+}
+
 .search-area {
   float: right;
   line-height: 2em;
@@ -492,6 +496,18 @@ article p code {
 
   .nav-header-image-overlay {
     clip: rect(8em, auto, auto, auto);
+  }
+
+  .nav-icon {
+    display: inline-block;
+  }
+
+  .nav-label {
+    display: none;
+  }
+
+  .search-box input {
+    width: 9em;
   }
 
   .page-header {

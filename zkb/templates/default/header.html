@@ -49,11 +49,11 @@
   <div class="content-container">
     <div class="column">
       <ul class="nav main-nav">
-        <li><a href="{{ site.url }}">Home</a></li>
-        <li><a href="{{ site.url }}tags">Tags</a></li>
-        <li><a href="{{ site.url }}archive">Archive</a></li>
+        <li><a href="{{ site.url }}"><i class="nav-icon fa fa-home" title="Home"></i><span class="nav-label">Home</span></a></li>
+        <li><a href="{{ site.url }}tags"><i class="nav-icon fa fa-tags" title="Tags"></i><span class="nav-label">Tags</span></a></li>
+        <li><a href="{{ site.url }}archive"><i class="nav-icon fa fa-archive" title="Archive"></i><span class="nav-label">Archive</span></a></li>
         {% if site.about_url | length != 0 %}
-        <li><a href="{{ site.about_url }}">About</a></li>
+        <li><a href="{{ site.about_url }}"><i class="nav-icon fa fa-user" title="About"></i><span class="nav-label">About</span></a></li>
         {% endif %}
       </ul>
     </div>
