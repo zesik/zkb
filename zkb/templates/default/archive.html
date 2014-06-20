@@ -19,11 +19,7 @@
               <h1><a href="{{ article.destination_url }}">{{ article.title }}</a></h1>
               {% if article.tags | length != 0 %}
               <div class="tags">
-                {% if site.enable_font_awesome %}
                 <i class="fa fa-tags" title="Tags"></i>
-                {% else %}
-                Tags:
-                {% endif %}
                 {% for tag in article.tags %}
                 <a href="{{ site.url }}tags/{{ tag | safe_url }}/">{{ tag }}</a>{% if not loop.last %},{% endif %}
                 {% endfor %}

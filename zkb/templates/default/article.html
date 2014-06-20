@@ -12,12 +12,8 @@
         <footer>
           {% if article.article_type | length == 0 %}
           <p class="meta">
-            {% if site.enable_font_awesome %}
             <span>
               <i class="fa fa-pencil"></i>
-            {% else %}
-              Posted by
-            {% endif %}
               {% if article.email | length != 0 %}
               <script type="text/javascript">
                 document.write("<n uers=\"znvygb:{{ article.email | rot13 }}\" ery=\"absbyybj\">".replace(/[a-zA-Z]/g, function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);}));
@@ -26,32 +22,18 @@
               {% else %}
               {{ article.author }}
               {% endif %}
-            {% if site.enable_font_awesome %}
             </span>
-            {% endif %}
-            {% if site.enable_font_awesome %}
             <span>
               <i class="fa fa-calendar"></i>
-            {% else %}
-              on
-            {% endif %}
               {{ article.date | date }}
-            {% if site.enable_font_awesome %}
             </span>
-            {% endif %}
             {% if article.tags | count != 0 %}
-            {% if site.enable_font_awesome %}
             <span>
               <i class="fa fa-tags"></i>
-            {% else %}
-              |
-            {% endif %}
               {% for tag in article.tags %}
               <a href="{{ site.url }}tags/{{ tag | safe_url }}/">{{ tag }}</a>{% if not loop.last %},{% endif %}
               {% endfor %}
-            {% if site.enable_font_awesome %}
             </span>
-            {% endif %}
             {% endif %}
           </p>
           <p class="pagination">

@@ -154,10 +154,6 @@ class SiteConfig(ConfigBase):
         {'name': 'DefaultSiteBuilder'},
         'Configuration of class to build the site.',
         ConfigItem.PRIVATE)
-    _enable_font_awesome = ConfigItem(
-        False,
-        'Whether to utilize icons from Font Awesome to show contents.',
-        ConfigItem.PRIVATE)
     _google_analytics = ConfigItem(
         '',
         'Google Analytics tracking ID. Google Analytics also needs domain '
@@ -217,7 +213,6 @@ class SiteConfig(ConfigBase):
         self.copyright = SiteConfig._copyright.default
         self.page_size = SiteConfig._page_size.default
         self.site_builder = SiteConfig._site_builder.default
-        self.enable_font_awesome = SiteConfig._enable_font_awesome.default
         self.google_analytics = SiteConfig._google_analytics.default
         self.cnzz_statistics = SiteConfig._cnzz_statistics.default
         self.disqus_shortname = SiteConfig._disqus_shortname.default
