@@ -60,11 +60,12 @@
     {% if site.show_search_box %}
     <div class="search-area">
       <div class="search-box">
-      <form method="get" action="//www.google.com/search" target="_blank">
-        <input type="text" name="q" value="" placeholder="Search" />
-        <input type="hidden" name="sitesearch" value="{{ site.domain }}"/>
-      </form>
-        </div>
+        <i class="fa fa-search search-icon"></i>
+        <form method="get" action="//www.google.com/search" target="_blank">
+          <input type="text" name="q" value="" placeholder="Search" />
+          <input type="hidden" name="sitesearch" value="{{ site.domain }}"/>
+        </form>
+      </div>
     </div>
     {% endif %}
   </div>

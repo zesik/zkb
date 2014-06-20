@@ -178,12 +178,20 @@ i.fa {
 
 .search-box {
   font-size: 0.8em;
+  position: relative;
+}
+
+.search-box .search-icon {
+  position: absolute;
+  margin-top: 0.7em;
+  margin-left: 0.5em;
+  pointer-events: none;
 }
 
 .search-box input {
   border: none;
   width: 12em;
-  padding: 0.1em 0.3em;
+  padding: 0.1em 0.3em 0.1em 1.6em;
 }
 
 .column {
@@ -414,6 +422,10 @@ article p code {
 
   .hero {
     height: 10em;
+  }
+
+  .search-box .search-icon {
+    margin-left: 0.3em;
   }
 }
 
