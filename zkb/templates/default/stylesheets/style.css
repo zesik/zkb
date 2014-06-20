@@ -223,17 +223,20 @@ article h1, article h2, article h3, article ul, article ol, article figure, arti
 
 article h1 {
   font-size: 1.6em;
+  line-height: 1.6em;
   margin-bottom: 1.2em;
 }
 
 article h2 {
   font-size: 1.4em;
+  line-height: 1.4em;
   margin-top: 1em;
   margin-bottom: 1em;
 }
 
 article h3 {
   font-size: 1.2em;
+  line-height: 1.2em;
   margin-top: 1em;
   margin-bottom: 1em;
 }
@@ -333,6 +336,7 @@ article p code {
 .blog-archives .article-info h1 {
   font-size: 1.2em;
   margin-bottom: 0.1em;
+  line-height: 1.2em;
 }
 
 .blog-archives .article-info .tags {
