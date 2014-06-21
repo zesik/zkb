@@ -15,10 +15,15 @@ body {
 
 body, button, input, select, textarea {
   font-size: 1em;
-  font-family: "Noto Sans","Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
+  font-family: "Noto Sans","Droid Sans","Helvetica Neue","Helvetica",Arial,sans-serif;
   font-weight: 400;
   font-style: normal;
   line-height: 1.6em;
+}
+
+pre, code {
+  font-family: "Menlo","Monaco","Droid Sans Mono","Consolas","Courier New",courier;
+  font-size: 0.8em;
 }
 
 a {
@@ -271,6 +276,7 @@ article p code {
   border: 1px solid #bdc3c7;
   border-radius: 4px;
   padding: 4px;
+  margin: 1px;
 }
 
 .article-list article {
