@@ -315,18 +315,16 @@ class ArticleConfig(ConfigBase):
         {'source': '',
          'html': '',
          'header_scripts': [],
-         'local_reference': {}},
+         'local_references': {}},
         None,
-        ConfigItem.DYNAMIC
-    )
+        ConfigItem.DYNAMIC)
     _full = ConfigItem(
         {'source': '',
          'html': '',
          'header_scripts': [],
-         'local_reference': {}},
+         'local_references': {}},
         None,
-        ConfigItem.DYNAMIC
-    )
+        ConfigItem.DYNAMIC)
 
     def __init__(self, site_config=None, config=None):
         """Initialize an article config.
@@ -353,8 +351,8 @@ class ArticleConfig(ConfigBase):
         self.article_type = ArticleConfig._article_type.default
         self.url = ArticleConfig._url.default
         self.output_file = ArticleConfig._output_file.default
-        self.abstract = ArticleConfig._abstract.default
-        self.full = ArticleConfig._full.default
+        self.abstract = dict(ArticleConfig._abstract.default)
+        self.full = dict(ArticleConfig._full.default)
         if site_config is not None:
             self.encoding = site_config.article_encoding
             self.language = site_config.language

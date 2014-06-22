@@ -1,3 +1,8 @@
+{% if tag | length != 0 %}
+{% set title = 'Articles Tagged with \'%s\'' % tag %}
+{% else %}
+{% set title = 'Archive' %}
+{% endif %}
 {% include 'header.html' %}
 
     <div class="main-column column article-body">
@@ -16,7 +21,7 @@
               {% endif %}
           <article class="lang-{{ article.language }}">
             <div class="article-info">
-              <h1><a href="{{ article.destination_url }}">{{ article.title }}</a></h1>
+              <h1><a href="{{ article.url }}">{{ article.title }}</a></h1>
               {% if article.tags | length != 0 %}
               <div class="tags">
                 <i class="fa fa-tags" title="Tags"></i>

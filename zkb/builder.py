@@ -304,13 +304,11 @@ class DefaultSiteBuilder(SiteBuilder):
         tags.insert(0, '')
         for tag in tags:
             if len(tag) == 0:
-                title = 'Blog Archive'
                 dest_file = os.path.join(
                     config.output_dir,
                     *(root_parts + ['archive', _INDEX_PAGE]))
                 dest_url = config.url + 'archive/'
             else:
-                title = 'Articles tagged with \'%s\'' % tag
                 safe_dir = _get_safe_tag_url(tag)
                 dest_file = os.path.join(
                     config.output_dir,
@@ -319,8 +317,6 @@ class DefaultSiteBuilder(SiteBuilder):
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.archive_template.render({
                 'site': config,
-                'title': title,
-                'page_title': '%s - %s' % (title, config.title),
                 'tag': tag
             })
             logger.debug('Writing \'%s\'...' % dest_file)
@@ -339,8 +335,6 @@ class DefaultSiteBuilder(SiteBuilder):
         logger.info('Rendering \'%s\'...' % dest_url)
         output = self.tags_templates.render({
             'site': config,
-            'title': 'Tags',
-            'page_title': 'Tags - %s' % config.title
         })
         logger.debug('Writing \'%s\'...' % dest_file)
         self._write(dest_file, config.encoding, output)
@@ -379,7 +373,6 @@ class DefaultSiteBuilder(SiteBuilder):
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.index_template.render({
                 'site': config,
-                'page_title': config.title,
                 'articles': chunk,
                 'prev_url': prev_url,
                 'next_url': next_url,

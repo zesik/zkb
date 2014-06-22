@@ -1,3 +1,4 @@
+{% set title = article.title %}
 {% include 'header.html' %}
 
     <div class="main-column column article-body">
@@ -8,7 +9,7 @@
           <p class="meta"><time datetime="{{ article.date | date('short') }}">{{ article.date | date }}</time></p>
           {% endif %}
         </header>
-        {{ article.content_html | safe }}
+        {{ article.full['html'] | safe }}
         <footer>
           {% if article.article_type | length == 0 %}
           <p class="meta">
