@@ -290,47 +290,43 @@ class ArticleConfig(ConfigBase):
     _enable_comments = ConfigItem(
         True,
         'Whether comments are enabled in this article.',
-        ConfigItem.NORMAL)
+        ConfigItem.PRIVATE)
     _enable_latex = ConfigItem(
         False,
         'Whether LaTeX support is enabled in this article.',
-        ConfigItem.NORMAL)
-    _filename = ConfigItem(
+        ConfigItem.PRIVATE)
+    _source_file = ConfigItem(
         '',
-        None,
-        ConfigItem.DYNAMIC)
-    _header_type = ConfigItem(
-        'yaml',
         None,
         ConfigItem.DYNAMIC)
     _content_type = ConfigItem(
         '',
         None,
         ConfigItem.DYNAMIC)
-    _content_source = ConfigItem(
+    _output_file = ConfigItem(
         '',
         None,
         ConfigItem.DYNAMIC)
-    _content_html = ConfigItem(
+    _url = ConfigItem(
         '',
         None,
         ConfigItem.DYNAMIC)
-    _destination_file = ConfigItem(
-        '',
+    _abstract = ConfigItem(
+        {'source': '',
+         'html': '',
+         'header_scripts': [],
+         'local_reference': {}},
         None,
-        ConfigItem.DYNAMIC)
-    _destination_url = ConfigItem(
-        '',
+        ConfigItem.DYNAMIC
+    )
+    _full = ConfigItem(
+        {'source': '',
+         'html': '',
+         'header_scripts': [],
+         'local_reference': {}},
         None,
-        ConfigItem.DYNAMIC)
-    _header_scripts = ConfigItem(
-        list(),
-        None,
-        ConfigItem.DYNAMIC)
-    _local_references = ConfigItem(
-        dict(),
-        None,
-        ConfigItem.DYNAMIC)
+        ConfigItem.DYNAMIC
+    )
 
     def __init__(self, site_config=None, config=None):
         """Initialize an article config.
@@ -341,14 +337,11 @@ class ArticleConfig(ConfigBase):
         :type config: dict
         """
         super(ArticleConfig, self).__init__()
-        self.filename = ArticleConfig._filename.default
-        self.header_type = ArticleConfig._header_type.default
+        self.source_file = ArticleConfig._source_file.default
         self.content_type = ArticleConfig._content_type.default
         self.encoding = ArticleConfig._encoding.default
         self.date = ArticleConfig._date.default
         self.language = ArticleConfig._language.default
-        self.content_source = ArticleConfig._content_source.default
-        self.content_html = ArticleConfig._content_html.default
         self.title = ArticleConfig._title.default
         self.author = ArticleConfig._author.default
         self.email = ArticleConfig._email.default
@@ -357,11 +350,11 @@ class ArticleConfig(ConfigBase):
         self.tags = ArticleConfig._tags.default
         self.enable_comments = ArticleConfig._enable_comments.default
         self.enable_latex = ArticleConfig._enable_latex.default
-        self.destination_file = ArticleConfig._destination_file.default
-        self.destination_url = ArticleConfig._destination_url.default
-        self.header_scripts = ArticleConfig._header_scripts.default
-        self.local_references = ArticleConfig._local_references.default
         self.article_type = ArticleConfig._article_type.default
+        self.url = ArticleConfig._url.default
+        self.output_file = ArticleConfig._output_file.default
+        self.abstract = ArticleConfig._abstract.default
+        self.full = ArticleConfig._full.default
         if site_config is not None:
             self.encoding = site_config.article_encoding
             self.language = site_config.language

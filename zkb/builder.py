@@ -52,7 +52,7 @@ class SiteBuilder(object):
         super(SiteBuilder, self).__init__()
         self.builder_config = kwargs
 
-    def _get_all_article_files(self, dirname, ignored_dirs=None):
+    def _get_article_files(self, dirname, ignored_dirs=None):
         all_article_files = []
         if ignored_dirs is None:
             ignored_dirs = []
@@ -114,61 +114,60 @@ class SiteBuilder(object):
         articles_by_tag = {}
         special_articles = {}
         for full_path, filename, header_type, content_type in \
-                self._get_all_article_files(config.article_dir,
-                                            [config.output_dir]):
+                self._get_article_files(config.article_dir,
+                                        [config.output_dir]):
             # Read article
             logger.info('Parsing \'%s\'...' % full_path)
             with self._read(full_path) as stream:
                 reader = HeaderedContentReader.from_type(header_type)
                 header, body = reader.read(stream)
-            article_config = ArticleConfig(config, header)
-            # Check for draft flag
-            if article_config.draft:
+            article = ArticleConfig(config, header)
+            # Ignore all draft articles
+            if article.draft:
                 continue
-            article_config.filename = full_path
-            article_config.header_type = header_type
-            if len(article_config.title) == 0:
-                article_config.title = filename
-            article_config.content_source = body
+            article.source_file = full_path
+            if len(article.title) == 0:
+                article.title = filename
+            article.content_source = body
             # Generate body
             if content_type is None:
                 extension = os.path.splitext(full_path)[1].lower()
                 generator = BodyGenerator.from_extension(extension)
             else:
                 generator = BodyGenerator.from_type(content_type)
-            article_config.content_html, meta = generator.generate(
+            article.full['html'], meta = generator.generate(
                 body, base=full_path, url=config.url)
-            article_config.update(meta)
+            article.full.update(meta)
             # Add date object
-            if isinstance(article_config.date, datetime.date):
-                article_config.date = datetime.datetime.combine(
-                    article_config.date, datetime.time(0, 0))
-            elif not isinstance(article_config.date, datetime.datetime):
-                if len(article_config.date) == 0:
-                    article_config.date = datetime.datetime.fromtimestamp(
+            if isinstance(article.date, datetime.date):
+                article.date = datetime.datetime.combine(
+                    article.date, datetime.time(0, 0))
+            elif not isinstance(article.date, datetime.datetime):
+                if len(article.date) == 0:
+                    article.date = datetime.datetime.fromtimestamp(
                         os.path.getmtime(full_path))
                 else:
-                    article_config.date = datetime.datetime.strptime(
-                        article_config.date, config.date_format)
+                    article.date = datetime.datetime.strptime(
+                        article.date, config.date_format)
             # Add slug info
-            if len(article_config.slug) == 0:
-                article_config.slug = slugify(article_config.title)
+            if len(article.slug) == 0:
+                article.slug = slugify(article.title)
             # Add tag info
-            if not isinstance(article_config.tags, str):
-                article_config.tags = str(article_config.tags)
-            article_config.tags = filter(
-                None, [tag.strip() for tag in article_config.tags.split(',')])
+            if not isinstance(article.tags, str):
+                article.tags = str(article.tags)
+            article.tags = filter(
+                None, [tag.strip() for tag in article.tags.split(',')])
             # Special procedure for special pages.
-            if article_config.article_type == ArticleConfig.ABOUT_PAGE:
-                article_config.tags = []
-                special_articles[ArticleConfig.ABOUT_PAGE] = article_config
+            if article.article_type == ArticleConfig.ABOUT_PAGE:
+                article.tags = []
+                special_articles[ArticleConfig.ABOUT_PAGE] = article
                 continue
             # Add article reference.
-            articles_by_date.append(article_config)
-            for tag in article_config.tags:
+            articles_by_date.append(article)
+            for tag in article.tags:
                 if tag not in articles_by_tag:
                     articles_by_tag[tag] = []
-                articles_by_tag[tag].append(article_config)
+                articles_by_tag[tag].append(article)
         articles_by_date.sort(key=lambda article: article.date, reverse=True)
         config.articles_by_date = articles_by_date
         config.articles_by_tag = articles_by_tag
@@ -244,20 +243,19 @@ class DefaultSiteBuilder(SiteBuilder):
         # Add path info for special pages
         if ArticleConfig.ABOUT_PAGE in config.special_articles:
             about_article = config.special_articles[ArticleConfig.ABOUT_PAGE]
-            about_article.destination_file = os.path.join(
+            about_article.url = config.url + ArticleConfig.ABOUT_PAGE + '/'
+            about_article.output_file = os.path.join(
                 config.output_dir,
                 *(root_parts + [ArticleConfig.ABOUT_PAGE, _INDEX_PAGE]))
-            about_article.destination_url = \
-                config.url + ArticleConfig.ABOUT_PAGE + '/'
-            config.about_url = about_article.destination_url
+            config.about_url = about_article.url
         # Add path info for articles
         for article in config.articles_by_date:
             path_parts = ['%d' % article.date.year,
                           '%02d' % article.date.month,
                           '%02d' % article.date.day,
                           article.slug]
-            article.destination_url = config.url + '/'.join(path_parts) + '/'
-            article.destination_file = os.path.join(
+            article.url = config.url + '/'.join(path_parts) + '/'
+            article.output_file = os.path.join(
                 config.output_dir, *(root_parts + path_parts + [_INDEX_PAGE]))
 
     def _build_special_pages(self, config):
@@ -267,15 +265,14 @@ class DefaultSiteBuilder(SiteBuilder):
         :type config: SiteConfig
         """
         for _, article in config.special_articles.iteritems():
-            logger.info('Rendering \'%s\'...' % article.destination_url)
+            logger.info('Rendering \'%s\'...' % article.url)
             output = self.article_template.render({
                 'site': config,
-                'page_title': '%s - %s' % (article.title, config.title),
                 'article': article,
-                'header_scripts': article.header_scripts
+                'header_scripts': article.full['header_scripts']
             })
-            logger.info('Writing \'%s\'...' % article.destination_file)
-            self._write(article.destination_file, config.encoding, output)
+            logger.debug('Writing \'%s\'...' % article.output_file)
+            self._write(article.output_file, config.encoding, output)
 
     def _build_article_pages(self, config):
         """Build article pages.
@@ -285,17 +282,16 @@ class DefaultSiteBuilder(SiteBuilder):
         """
         for prev_article, article, next_article in \
                 _get_prev_and_next(config.articles_by_date):
-            logger.info('Rendering \'%s\'...' % article.destination_url)
+            logger.info('Rendering \'%s\'...' % article.url)
             output = self.article_template.render({
                 'site': config,
-                'page_title': '%s - %s' % (article.title, config.title),
                 'article': article,
                 'prev': prev_article,
                 'next': next_article,
-                'header_scripts': article.header_scripts
+                'header_scripts': article.full['header_scripts']
             })
-            logger.info('Writing \'%s\'...' % article.destination_file)
-            self._write(article.destination_file, config.encoding, output)
+            logger.debug('Writing \'%s\'...' % article.output_file)
+            self._write(article.output_file, config.encoding, output)
 
     def _build_archive_pages(self, config):
         """Build archive pages.
@@ -327,7 +323,7 @@ class DefaultSiteBuilder(SiteBuilder):
                 'page_title': '%s - %s' % (title, config.title),
                 'tag': tag
             })
-            logger.info('Writing \'%s\'...' % dest_file)
+            logger.debug('Writing \'%s\'...' % dest_file)
             self._write(dest_file, config.encoding, output)
 
     def _build_tags_page(self, config):
@@ -346,7 +342,7 @@ class DefaultSiteBuilder(SiteBuilder):
             'title': 'Tags',
             'page_title': 'Tags - %s' % config.title
         })
-        logger.info('Writing \'%s\'...' % dest_file)
+        logger.debug('Writing \'%s\'...' % dest_file)
         self._write(dest_file, config.encoding, output)
 
     def _build_index_pages(self, config):
@@ -379,7 +375,7 @@ class DefaultSiteBuilder(SiteBuilder):
                 next_url = config.url + '/'.join(['page', str(index + 2)])
             header_scripts = set()
             for article in chunk:
-                header_scripts.update(article.header_scripts)
+                header_scripts.update(article.full['header_scripts'])
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.index_template.render({
                 'site': config,
@@ -389,7 +385,7 @@ class DefaultSiteBuilder(SiteBuilder):
                 'next_url': next_url,
                 'header_scripts': header_scripts
             })
-            logger.info('Writing \'%s\'...' % dest_file)
+            logger.debug('Writing \'%s\'...' % dest_file)
             self._write(dest_file, config.encoding, output)
 
     def _copy_resources(self, config):
@@ -400,9 +396,9 @@ class DefaultSiteBuilder(SiteBuilder):
         """
         resources = {}
         for _, article in config.special_articles.iteritems():
-            resources.update(article.local_references)
+            resources.update(article.full['local_references'])
         for article in config.articles_by_date:
-            resources.update(article.local_references)
+            resources.update(article.full['local_references'])
         for source, dest in resources.iteritems():
             dest_file = os.path.join(config.output_dir, *dest)
             logger.info('Copying resource to \'%s\'...' % dest_file)
