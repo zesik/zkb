@@ -28,6 +28,7 @@ from zkb.log import logger
 
 
 _INDEX_PAGE = 'index.html'
+_404_PAGE = '404.html'
 
 
 def build_site(config):
@@ -158,9 +159,12 @@ class SiteBuilder(object):
             article.tags = filter(
                 None, [tag.strip() for tag in article.tags.split(',')])
             # Special procedure for special pages.
-            if article.article_type == ArticleConfig.ABOUT_PAGE:
+            if not isinstance(article.article_type, str):
+                article.article_type = str(article.article_type)
+            if article.article_type == ArticleConfig.ABOUT_PAGE \
+                    or article.article_type == ArticleConfig.NOT_FOUND_PAGE:
                 article.tags = []
-                special_articles[ArticleConfig.ABOUT_PAGE] = article
+                special_articles[article.article_type] = article
                 continue
             # Add article reference.
             articles_by_date.append(article)
@@ -241,13 +245,20 @@ class DefaultSiteBuilder(SiteBuilder):
         """
         root_parts = filter(None, config.url.split('/'))
         # Add path info for special pages
-        if ArticleConfig.ABOUT_PAGE in config.special_articles:
-            about_article = config.special_articles[ArticleConfig.ABOUT_PAGE]
-            about_article.url = config.url + ArticleConfig.ABOUT_PAGE + '/'
-            about_article.output_file = os.path.join(
-                config.output_dir,
-                *(root_parts + [ArticleConfig.ABOUT_PAGE, _INDEX_PAGE]))
-            config.about_url = about_article.url
+        for article_type, article in config.special_articles.iteritems():
+            if article_type == ArticleConfig.ABOUT_PAGE:
+                article.url = config.url + ArticleConfig.ABOUT_PAGE + '/'
+                article.output_file = os.path.join(
+                    config.output_dir,
+                    *(root_parts + [ArticleConfig.ABOUT_PAGE, _INDEX_PAGE]))
+                config.about_url = article.url
+            elif article_type == ArticleConfig.NOT_FOUND_PAGE:
+                if len(article.url) == 0:
+                    article.url = '/'
+                article.output_file = os.path.join(
+                    config.output_dir,
+                    *(root_parts + filter(None, article.url.split('/')) +
+                      [_404_PAGE]))
         # Add path info for articles
         for article in config.articles_by_date:
             path_parts = ['%d' % article.date.year,
@@ -265,7 +276,7 @@ class DefaultSiteBuilder(SiteBuilder):
         :type config: SiteConfig
         """
         for _, article in config.special_articles.iteritems():
-            logger.info('Rendering \'%s\'...' % article.url)
+            logger.info('Rendering special page: %s...' % article.article_type)
             output = self.article_template.render({
                 'site': config,
                 'article': article,

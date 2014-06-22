@@ -246,6 +246,7 @@ class ArticleConfig(ConfigBase):
     """Represents config for articles."""
 
     ABOUT_PAGE = 'about'
+    NOT_FOUND_PAGE = '404'
 
     _encoding = ConfigItem(
         DEFAULT_ENCODING,
