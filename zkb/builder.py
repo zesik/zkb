@@ -122,6 +122,7 @@ class SiteBuilder(object):
             with self._read(full_path) as stream:
                 reader = HeaderedContentReader.from_type(header_type)
                 header, body = reader.read(stream)
+                abstract = body
             article = ArticleConfig(config, header)
             # Ignore all draft articles
             if article.draft:
@@ -139,6 +140,9 @@ class SiteBuilder(object):
             article.full['html'], meta = generator.generate(
                 body, base=full_path, url=config.url)
             article.full.update(meta)
+            article.abstract['html'], meta = generator.generate(
+                abstract, base=full_path, url=config.url)
+            article.abstract.update(meta)
             # Add date object
             if isinstance(article.date, datetime.date):
                 article.date = datetime.datetime.combine(
@@ -380,7 +384,7 @@ class DefaultSiteBuilder(SiteBuilder):
                 next_url = config.url + '/'.join(['page', str(index + 2)])
             header_scripts = set()
             for article in chunk:
-                header_scripts.update(article.full['header_scripts'])
+                header_scripts.update(article.abstract['header_scripts'])
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.index_template.render({
                 'site': config,
