@@ -104,6 +104,22 @@ class TestYamlReader(unittest.TestCase):
         output.write(data.encode('utf-8', 'replace'))
         return output
 
+    def _create_stream_fnm_utf8(self):
+        output = cStringIO.StringIO()
+        data = (u'title: Title\n'
+                u'more_separator: --CUSTOMIZED-MORE-SEPARATOR--\n'
+                u'\n'
+                u'Contents.\n'
+                u'Article\n'
+                u'\n'
+                u'Article\n'
+                u'--MORE--\n'
+                u'Here should belong to full article.\n'
+                u'--MORE--\n'
+                u'Here should belong to full article.\n')
+        output.write(data.encode('utf-8', 'replace'))
+        return output
+
     def _destroy_buffers(self, streams):
         for stream in streams:
             stream.close()
@@ -174,27 +190,31 @@ class TestYamlReader(unittest.TestCase):
              self._create_stream_f_utf8(),
              self._create_stream_f_gb18030(),
              self._create_stream_f_euc_jp(),
-             self._create_stream_fm_utf8()]
+             self._create_stream_fm_utf8(),
+             self._create_stream_fnm_utf8()]
         result = [reader.read(s[0]),
                   reader.read(s[1]),
                   reader.read(s[2]),
                   reader.read(s[3]),
                   reader.read(s[4]),
                   reader.read(s[5]),
-                  reader.read(s[6])]
+                  reader.read(s[6]),
+                  reader.read(s[7])]
         self._destroy_buffers(s)
 
         self._verify_headers(result)
-        self.assertIsNotNone(result[0][1], 'content is None')
-        self.assertIsNotNone(result[1][1], 'content is None')
-        self.assertIsNotNone(result[2][1], 'content is None')
-        self.assertIsNotNone(result[3][1], 'content is None')
-        self.assertIsNotNone(result[4][1], 'content is None')
-        self.assertIsNotNone(result[5][1], 'content is None')
-        self.assertIsNotNone(result[6][1], 'content is None')
-        self.assertEqual(result[0][1], '')
-        self.assertEqual(result[1][1], '')
-        self.assertEqual(result[2][1], '')
+        self.assertIsNotNone(result[0][2], 'content is None')
+        self.assertIsNotNone(result[1][2], 'content is None')
+        self.assertIsNotNone(result[2][2], 'content is None')
+        self.assertIsNotNone(result[3][2], 'content is None')
+        self.assertIsNotNone(result[4][2], 'content is None')
+        self.assertIsNotNone(result[5][2], 'content is None')
+        self.assertIsNotNone(result[6][2], 'content is None')
+        self.assertIsNotNone(result[7][2], 'content is None')
+
+        self.assertIsNone(result[0][1], 'abstract is not None')
+        self.assertIsNone(result[1][1], 'abstract is not None')
+        self.assertIsNone(result[2][1], 'abstract is not None')
         self.assertEqual(result[3][1], u'コンテンツ。\n'
                                        u'テスト。文章。\n'
                                        u'\n'
@@ -213,6 +233,8 @@ class TestYamlReader(unittest.TestCase):
                                        u'Article\n'
                                        u'--MORE--\n'
                                        u'Here should belong to abstract.')
+        self.assertIsNone(result[7][1], 'abstract is not None')
+
         self.assertEqual(result[0][2], '')
         self.assertEqual(result[1][2], '')
         self.assertEqual(result[2][2], '')
@@ -237,4 +259,12 @@ class TestYamlReader(unittest.TestCase):
                                        u'Article\n'
                                        u'--MORE--\n'
                                        u'Here should belong to abstract.\n'
+                                       u'Here should belong to full article.')
+        self.assertEqual(result[7][2], u'Contents.\n'
+                                       u'Article\n'
+                                       u'\n'
+                                       u'Article\n'
+                                       u'--MORE--\n'
+                                       u'Here should belong to full article.\n'
+                                       u'--MORE--\n'
                                        u'Here should belong to full article.')

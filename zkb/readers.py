@@ -219,14 +219,14 @@ class HeaderedContentReader(object):
         more_separator = self._get_more_header(header_result)
         if more_separator is None or len(more_separator) == 0:
             payload_result = u'\n'.join(payload)
-            return header_result, payload_result, payload_result
+            return header_result, None, payload_result
         for index, line in enumerate(payload):
             if line == more_separator:
                 abstract = u'\n'.join(payload[:index])
                 full = u'\n'.join(payload[:index] + payload[index + 1:])
                 return header_result, abstract, full
         payload_result = u'\n'.join(payload)
-        return header_result, payload_result, payload_result
+        return header_result, None, payload_result
 
 
 class YamlHeaderedContentReader(HeaderedContentReader):
