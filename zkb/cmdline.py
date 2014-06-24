@@ -39,7 +39,7 @@ def _load_config(filename):
     reader = HeaderedContentReader.from_extension(extension)
     logger.info('Loading config...')
     with open(filename, 'r') as stream:
-        config, _ = reader.read(stream)
+        config, _, _ = reader.read(stream)
     return SiteConfig(config)
 
 

@@ -121,8 +121,7 @@ class SiteBuilder(object):
             logger.info('Parsing \'%s\'...' % full_path)
             with self._read(full_path) as stream:
                 reader = HeaderedContentReader.from_type(header_type)
-                header, body = reader.read(stream)
-                abstract = body
+                header, abstract, body = reader.read(stream)
             article = ArticleConfig(config, header)
             # Ignore all draft articles
             if article.draft:
