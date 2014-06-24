@@ -16,6 +16,9 @@ from zkb.utils import DEFAULT_ENCODING
 from zkb.utils import UnknownEncodingError
 
 
+_DEFAULT_MORE_SEPARATOR = '--MORE--'
+
+
 class HeaderedContentReader(object):
     """Base class of reader for reading and parsing a headered file.
 
@@ -98,6 +101,24 @@ class HeaderedContentReader(object):
         """
         pass
 
+    def _get_more_header(self, header):
+        """Get the MORE separator used to split the payload.
+
+        This method is called by :func:`read` after all content is properly
+        read. Do not call this method manually.
+
+        Having different configuration, this class does not actual read header
+        for MORE separator, but define an interface so that subclasses can
+        override this method to return correct MORE separator.
+
+        :param header: a dict of header, which is returned by
+            :func:`_parse_header`.
+        :type header: dict
+        :return: a string representing MORE header.
+        :rtype: str
+        """
+        pass
+
     def read(self, stream, read_payload=True, base=None):
         """Reads a headered file and parse its header.
 
@@ -120,6 +141,15 @@ class HeaderedContentReader(object):
         correct. Subclasses can override :func:`_get_encoding` method to
         extract correct encoding information.
 
+        If a line contains only MORE separator and a line feed, payload will be
+        separated to two different parts. Content before MORE separator is
+        returned as the second element of the tuple, and full content excluding
+        the line of MORE separator will be returned as the third element of the
+        tuple. If MORE separator is not found, the second and the third
+        elements of the tuple will be the same. :func:`_get_more_header` method
+        will be called after header is fully read. You can return MORE header
+        with it.
+
         :param stream: a stream to read.
         :type stream: stream
         :param read_payload: True if payload of the file should be read; False
@@ -128,9 +158,10 @@ class HeaderedContentReader(object):
         :param base: if provided, a copy of *base* will be returned with
             key/value updated with data read from file header.
         :type base: dict or None
-        :return: a tuple containing two objects; respectively these are a dict
-            parsed from header and the payload of the file. Payload will be
-            None if *read_payload* is False.
+        :return: a tuple containing three objects; respectively these are a
+            dict parsed from header, the content of the payload before MORE
+            separator, and the full content of the payload. Payload will
+            be None if *read_payload* is False.
         :rtype: tuple
         :raises UnknownEncodingError: if encoding specified in header is not
             supported.
@@ -183,8 +214,19 @@ class HeaderedContentReader(object):
                                 encoding = specified
                                 break
         header_result = self._parse_header(header, base)
-        payload_result = None if not read_payload else u'\n'.join(payload)
-        return header_result, payload_result
+        if not read_payload:
+            return header_result, None, None
+        more_separator = self._get_more_header(header_result)
+        if more_separator is None or len(more_separator) == 0:
+            payload_result = u'\n'.join(payload)
+            return header_result, payload_result, payload_result
+        for index, line in enumerate(payload):
+            if line == more_separator:
+                abstract = u'\n'.join(payload[:index])
+                full = u'\n'.join(payload[:index] + payload[index + 1:])
+                return header_result, abstract, full
+        payload_result = u'\n'.join(payload)
+        return header_result, payload_result, payload_result
 
 
 class YamlHeaderedContentReader(HeaderedContentReader):
@@ -212,7 +254,7 @@ class YamlHeaderedContentReader(HeaderedContentReader):
             return parsed['encoding']
 
     def _parse_header(self, header, base=None):
-        """Override to parses header lines in YAML format to dictionary.
+        """Override to parse header lines in YAML format to dictionary.
 
         :param header: a list containing header lines.
         :type header: list
@@ -228,6 +270,18 @@ class YamlHeaderedContentReader(HeaderedContentReader):
         result.update(parsed if parsed is not None else {})
         return result
 
+    def _get_more_header(self, header):
+        """Override to parse header dict for MORE header.
+
+        :param header: a dict of header, which is returned by
+            :func:`_parse_header`.
+        :type header: dict
+        :return: a string representing MORE header.
+        :rtype: str
+        """
+        if 'more_separator' in header:
+            return header['more_separator']
+        return _DEFAULT_MORE_SEPARATOR
 
 _READER_EXTENSIONS = {
     '.yml': 'yaml',

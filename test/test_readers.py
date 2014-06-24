@@ -91,7 +91,7 @@ class TestYamlReader(unittest.TestCase):
     def _create_stream_fm_utf8(self):
         output = cStringIO.StringIO()
         data = (u'title: Title\n'
-                u'separator: --CUSTOMIZED-MORE-SEPARATOR--\n'
+                u'more_separator: --CUSTOMIZED-MORE-SEPARATOR--\n'
                 u'\n'
                 u'Contents.\n'
                 u'Article\n'
@@ -208,11 +208,11 @@ class TestYamlReader(unittest.TestCase):
                                        u'\n'
                                        u'アーティカル。')
         self.assertEqual(result[6][1], u'Contents.\n'
-                                       u'Article.\n'
+                                       u'Article\n'
                                        u'\n'
                                        u'Article\n'
                                        u'--MORE--\n'
-                                       u'Here should belong to abstract.\n')
+                                       u'Here should belong to abstract.')
         self.assertEqual(result[0][2], '')
         self.assertEqual(result[1][2], '')
         self.assertEqual(result[2][2], '')
@@ -220,7 +220,7 @@ class TestYamlReader(unittest.TestCase):
                                        u'テスト。文章。\n'
                                        u'\n'
                                        u'アーティカル。\n'
-                                       u'詳しい内容。\n')
+                                       u'詳しい内容。')
         self.assertEqual(result[4][2], u'中文正文。\n'
                                        u'测试。文章。\n'
                                        u'\n'
@@ -230,11 +230,11 @@ class TestYamlReader(unittest.TestCase):
                                        u'テスト。文章。\n'
                                        u'\n'
                                        u'アーティカル。\n'
-                                       u'詳しい内容。\n')
+                                       u'詳しい内容。')
         self.assertEqual(result[6][2], u'Contents.\n'
-                                       u'Article.\n'
+                                       u'Article\n'
                                        u'\n'
                                        u'Article\n'
                                        u'--MORE--\n'
                                        u'Here should belong to abstract.\n'
-                                       u'Here should belong to full article.\n')
+                                       u'Here should belong to full article.')
