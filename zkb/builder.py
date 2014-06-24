@@ -136,12 +136,15 @@ class SiteBuilder(object):
                 generator = BodyGenerator.from_extension(extension)
             else:
                 generator = BodyGenerator.from_type(content_type)
+            if abstract is None:
+                article.abstract = None
+            else:
+                article.abstract['html'], meta = generator.generate(
+                    abstract, base=full_path, url=config.url)
+                article.abstract.update(meta)
             article.full['html'], meta = generator.generate(
                 body, base=full_path, url=config.url)
             article.full.update(meta)
-            article.abstract['html'], meta = generator.generate(
-                abstract, base=full_path, url=config.url)
-            article.abstract.update(meta)
             # Add date object
             if isinstance(article.date, datetime.date):
                 article.date = datetime.datetime.combine(
@@ -383,7 +386,11 @@ class DefaultSiteBuilder(SiteBuilder):
                 next_url = config.url + '/'.join(['page', str(index + 2)])
             header_scripts = set()
             for article in chunk:
-                header_scripts.update(article.abstract['header_scripts'])
+                if article.abstract is not None:
+                    data_to_insert = article.abstract['header_scripts']
+                else:
+                    data_to_insert = article.full['header_scripts']
+                header_scripts.update(data_to_insert)
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.index_template.render({
                 'site': config,

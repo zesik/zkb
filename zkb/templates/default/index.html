@@ -7,7 +7,12 @@
           <h1><a href="{{ article.url }}">{{ article.title }}</a></h1>
           <p class="meta"><time datetime="{{ article.date | date('short') }}">{{ article.date | date }}</time></p>
         </header>
+        {% if article.abstract is not none %}
         {{ article.abstract['html'] | safe }}
+        <p><a href="{{ article.url }}">Read More...</a></p>
+        {% else %}
+        {{ article.full['html'] | safe }}
+        {% endif %}
       </article>
       {% endfor %}
 
