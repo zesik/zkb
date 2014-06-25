@@ -18,7 +18,7 @@ import SimpleHTTPServer
 import webbrowser
 
 from zkb.readers import HeaderedContentReader
-from zkb.builder import build_site
+from zkb.builder import SiteBuilder
 from zkb.config import SiteConfig
 from zkb.log import logger
 
@@ -88,7 +88,7 @@ def init_git(args):
 
 def build(args):
     config = _load_config(args.config)
-    result = build_site(config)
+    result = SiteBuilder.from_config(config).build()
     if result == 0:
         logger.info('All done.')
     else:

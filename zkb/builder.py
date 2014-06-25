@@ -31,29 +31,11 @@ _INDEX_PAGE = 'index.html'
 _404_PAGE = '404.html'
 
 
-def build_site(config):
-    builder_config = config.site_builder
-    try:
-        name = builder_config['name']
-        del builder_config['name']
-    except KeyError:
-        name = DefaultSiteBuilder.__name__
-    try:
-        constructor = globals()[name]
-    except KeyError:
-        raise UnknownBuilderError(name)
-    builder = constructor(**builder_config)
-    return builder.build(config)
+class FileProcessor(object):
+    """Actual handler of file operation.
+    """
 
-
-class SiteBuilder(object):
-    _ARTICLE_HEADER_TYPE = 'yaml'
-
-    def __init__(self, **kwargs):
-        super(SiteBuilder, self).__init__()
-        self.builder_config = kwargs
-
-    def _get_article_files(self, dirname, ignored_dirs=None):
+    def get_article_files(self, dirname, ignored_dirs=None):
         all_article_files = []
         if ignored_dirs is None:
             ignored_dirs = []
@@ -82,47 +64,73 @@ class SiteBuilder(object):
                 all_article_files.append(item)
         return all_article_files
 
-    def _read(self, filename):
+    def read(self, filename):
         return open(filename, 'r')
 
-    def _write(self, filename, encoding, content):
+    def write(self, filename, encoding, content):
         dest_dir = os.path.dirname(filename)
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         with open(filename, 'w+') as f:
             f.write(content.encode(encoding))
 
-    def _write_stream(self, filename, stream):
+    def write_stream(self, filename, stream):
         dest_dir = os.path.dirname(filename)
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         with open(filename, 'wb+') as f:
             f.write(stream.read())
 
-    def _copy_file(self, source, destination):
+    def copy_file(self, source, destination):
         dest_dir = os.path.dirname(destination)
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         shutil.copy2(source, destination)
 
-    def build(self, config):
-        """Build the site.
 
-        :param config: site config.
-        :type config: SiteConfig
+class SiteBuilder(object):
+    """This class (and its subclasses) handles the core logic of building the
+    blog site. To build the site, create a builder with func:`from_config` with
+    the site config.
+
+    :param config: configuration of the blog site.
+    :type config: SiteConfig
+    :param fileproc: file processor.
+    :type fileproc: FileProcessor
+    """
+    _ARTICLE_HEADER_TYPE = 'yaml'
+
+    def __init__(self, config, fileproc):
+        super(SiteBuilder, self).__init__()
+        self.config = config
+        self.fileproc = fileproc
+
+    @classmethod
+    def from_config(cls, config):
+        name = config.site_builder
+        if type(name) not in types.StringTypes or len(name) == 0:
+            name = DefaultSiteBuilder.__name__
+        try:
+            constructor = globals()[name]
+        except KeyError:
+            raise UnknownBuilderError(name)
+        return constructor(config, FileProcessor())
+
+    def build(self):
+        """Main logic for building the site.
         """
         articles_by_date = []
         articles_by_tag = {}
         special_articles = {}
         for full_path, filename, header_type, content_type in \
-                self._get_article_files(config.article_dir,
-                                        [config.output_dir]):
+                self.fileproc.get_article_files(
+                        self.config.article_dir, [self.config.output_dir]):
             # Read article
             logger.info('Parsing \'%s\'...' % full_path)
-            with self._read(full_path) as stream:
+            with self.fileproc.read(full_path) as stream:
                 reader = HeaderedContentReader.from_type(header_type)
                 header, abstract, body = reader.read(stream)
-            article = ArticleConfig(config, header)
+            article = ArticleConfig(self.config, header)
             # Ignore all draft articles
             if article.draft:
                 continue
@@ -140,10 +148,10 @@ class SiteBuilder(object):
                 article.abstract = None
             else:
                 article.abstract['html'], meta = generator.generate(
-                    abstract, base=full_path, url=config.url)
+                    abstract, base=full_path, url=self.config.url)
                 article.abstract.update(meta)
             article.full['html'], meta = generator.generate(
-                body, base=full_path, url=config.url)
+                body, base=full_path, url=self.config.url)
             article.full.update(meta)
             # Add date object
             if isinstance(article.date, datetime.date):
@@ -155,7 +163,7 @@ class SiteBuilder(object):
                         os.path.getmtime(full_path))
                 else:
                     article.date = datetime.datetime.strptime(
-                        article.date, config.date_format)
+                        article.date, self.config.date_format)
             # Add slug info
             if len(article.slug) == 0:
                 article.slug = slugify(article.title)
@@ -179,16 +187,13 @@ class SiteBuilder(object):
                     articles_by_tag[tag] = []
                 articles_by_tag[tag].append(article)
         articles_by_date.sort(key=lambda article: article.date, reverse=True)
-        config.articles_by_date = articles_by_date
-        config.articles_by_tag = articles_by_tag
-        config.special_articles = special_articles
-        return self._do_build(config)
+        self.config.articles_by_date = articles_by_date
+        self.config.articles_by_tag = articles_by_tag
+        self.config.special_articles = special_articles
+        return self._do_build()
 
-    def _do_build(self, config):
+    def _do_build(self):
         """Write output data for the blog.
-
-        :param config: site configuration.
-        :type config: SiteConfig
         """
         pass
 
@@ -211,8 +216,8 @@ def _get_safe_tag_url(value):
 
 
 class DefaultSiteBuilder(SiteBuilder):
-    def __init__(self, **kwargs):
-        super(DefaultSiteBuilder, self).__init__(**kwargs)
+    def __init__(self, config, fileproc):
+        super(DefaultSiteBuilder, self).__init__(config, fileproc)
         self._load_templates()
         self._copy_files = [
             'stylesheets/style.css',
@@ -243,147 +248,148 @@ class DefaultSiteBuilder(SiteBuilder):
         self.archive_template = env.get_template('archive.html')
         self.tags_templates = env.get_template('tags.html')
 
-    def _add_path_info(self, config):
+    def _add_path_info(self):
         """Add info of path and output directory for each article.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
-        root_parts = filter(None, config.url.split('/'))
+        root_parts = filter(None, self.config.url.split('/'))
         # Add path info for special pages
-        for article_type, article in config.special_articles.iteritems():
+        for article_type, article in self.config.special_articles.iteritems():
             if article_type == ArticleConfig.ABOUT_PAGE:
-                article.url = config.url + ArticleConfig.ABOUT_PAGE + '/'
+                article.url = self.config.url + ArticleConfig.ABOUT_PAGE + '/'
                 article.output_file = os.path.join(
-                    config.output_dir,
+                    self.config.output_dir,
                     *(root_parts + [ArticleConfig.ABOUT_PAGE, _INDEX_PAGE]))
-                config.about_url = article.url
+                self.config.about_url = article.url
             elif article_type == ArticleConfig.NOT_FOUND_PAGE:
                 if len(article.url) == 0:
                     article.url = '/'
                 article.output_file = os.path.join(
-                    config.output_dir,
+                    self.config.output_dir,
                     *(root_parts + filter(None, article.url.split('/')) +
                       [_404_PAGE]))
         # Add path info for articles
-        for article in config.articles_by_date:
+        for article in self.config.articles_by_date:
             path_parts = ['%d' % article.date.year,
                           '%02d' % article.date.month,
                           '%02d' % article.date.day,
                           article.slug]
-            article.url = config.url + '/'.join(path_parts) + '/'
+            article.url = self.config.url + '/'.join(path_parts) + '/'
             article.output_file = os.path.join(
-                config.output_dir, *(root_parts + path_parts + [_INDEX_PAGE]))
+                self.config.output_dir,
+                *(root_parts + path_parts + [_INDEX_PAGE]))
 
-    def _build_special_pages(self, config):
+    def _build_special_pages(self):
         """Build special pages.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
-        for _, article in config.special_articles.iteritems():
+        for _, article in self.config.special_articles.iteritems():
             logger.info('Rendering special page: %s...' % article.article_type)
             output = self.article_template.render({
-                'site': config,
+                'site': self.config,
                 'article': article,
                 'header_scripts': article.full['header_scripts']
             })
-            logger.debug('Writing \'%s\'...' % article.output_file)
-            self._write(article.output_file, config.encoding, output)
+            self.fileproc.write(
+                article.output_file, self.config.encoding, output)
 
-    def _build_article_pages(self, config):
+    def _build_article_pages(self):
         """Build article pages.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
         for prev_article, article, next_article in \
-                _get_prev_and_next(config.articles_by_date):
+                _get_prev_and_next(self.config.articles_by_date):
             logger.info('Rendering \'%s\'...' % article.url)
             output = self.article_template.render({
-                'site': config,
+                'site': self.config,
                 'article': article,
                 'prev': prev_article,
                 'next': next_article,
                 'header_scripts': article.full['header_scripts']
             })
-            logger.debug('Writing \'%s\'...' % article.output_file)
-            self._write(article.output_file, config.encoding, output)
+            self.fileproc.write(
+                article.output_file, self.config.encoding, output)
 
-    def _build_archive_pages(self, config):
+    def _build_archive_pages(self):
         """Build archive pages.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
-        root_parts = filter(None, config.url.split('/'))
-        tags = list(config.articles_by_tag.keys())
+        root_parts = filter(None, self.config.url.split('/'))
+        tags = list(self.config.articles_by_tag.keys())
         tags.insert(0, '')
         for tag in tags:
             if len(tag) == 0:
                 dest_file = os.path.join(
-                    config.output_dir,
+                    self.config.output_dir,
                     *(root_parts + ['archive', _INDEX_PAGE]))
-                dest_url = config.url + 'archive/'
+                dest_url = self.config.url + 'archive/'
             else:
                 safe_dir = _get_safe_tag_url(tag)
                 dest_file = os.path.join(
-                    config.output_dir,
+                    self.config.output_dir,
                     *(root_parts + ['tags', safe_dir, _INDEX_PAGE]))
-                dest_url = config.url + 'tags/' + safe_dir + '/'
+                dest_url = self.config.url + 'tags/' + safe_dir + '/'
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.archive_template.render({
-                'site': config,
+                'site': self.config,
                 'tag': tag
             })
-            logger.debug('Writing \'%s\'...' % dest_file)
-            self._write(dest_file, config.encoding, output)
+            self.fileproc.write(dest_file, self.config.encoding, output)
 
-    def _build_tags_page(self, config):
+    def _build_tags_page(self):
         """Build tags page.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
-        root_parts = filter(None, config.url.split('/'))
-        dest_file = os.path.join(config.output_dir,
+        root_parts = filter(None, self.config.url.split('/'))
+        dest_file = os.path.join(self.config.output_dir,
                                  *(root_parts + ['tags', _INDEX_PAGE]))
-        dest_url = config.url + 'tags/'
+        dest_url = self.config.url + 'tags/'
         logger.info('Rendering \'%s\'...' % dest_url)
         output = self.tags_templates.render({
-            'site': config,
+            'site': self.config,
         })
-        logger.debug('Writing \'%s\'...' % dest_file)
-        self._write(dest_file, config.encoding, output)
+        self.fileproc.write(
+            dest_file, self.config.encoding, output)
 
-    def _build_index_pages(self, config):
+    def _build_index_pages(self):
         """Build index pages.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
-        root_parts = filter(None, config.url.split('/'))
-        chunks = _get_chunks(config.articles_by_date, config.page_size)
+        root_parts = filter(None, self.config.url.split('/'))
+        chunks = _get_chunks(self.config.articles_by_date,
+                             self.config.page_size)
         for index, chunk in enumerate(chunks):
             if index == 0:
-                dest_file = os.path.join(config.output_dir,
+                dest_file = os.path.join(self.config.output_dir,
                                          *(root_parts + [_INDEX_PAGE]))
-                dest_url = config.url
+                dest_url = self.config.url
             else:
                 dest_file = os.path.join(
-                    config.output_dir,
+                    self.config.output_dir,
                     *(root_parts + ['page', str(index + 1), _INDEX_PAGE]))
-                dest_url = config.url + 'page/' + str(index + 1) + '/'
+                dest_url = self.config.url + 'page/' + str(index + 1) + '/'
             if index == 0:
                 prev_url = ''
             elif index == 1:
-                prev_url = config.url
+                prev_url = self.config.url
             else:
-                prev_url = config.url + '/'.join(['page', str(index)])
+                prev_url = self.config.url + '/'.join(['page', str(index)])
             if index == len(chunks) - 1:
                 next_url = ''
             else:
-                next_url = config.url + '/'.join(['page', str(index + 2)])
+                next_url = self.config.url + '/'.join(['page', str(index + 2)])
             header_scripts = set()
             for article in chunk:
                 if article.abstract is not None:
@@ -393,84 +399,68 @@ class DefaultSiteBuilder(SiteBuilder):
                 header_scripts.update(data_to_insert)
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.index_template.render({
-                'site': config,
+                'site': self.config,
                 'articles': chunk,
                 'prev_url': prev_url,
                 'next_url': next_url,
                 'header_scripts': header_scripts
             })
-            logger.debug('Writing \'%s\'...' % dest_file)
-            self._write(dest_file, config.encoding, output)
+            self.fileproc.write(dest_file, self.config.encoding, output)
 
-    def _copy_resources(self, config):
+    def _copy_resources(self):
         """Copy resource files used in articles.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
         resources = {}
-        for _, article in config.special_articles.iteritems():
+        for _, article in self.config.special_articles.iteritems():
             resources.update(article.full['local_references'])
-        for article in config.articles_by_date:
+        for article in self.config.articles_by_date:
             resources.update(article.full['local_references'])
         for source, dest in resources.iteritems():
-            dest_file = os.path.join(config.output_dir, *dest)
+            dest_file = os.path.join(self.config.output_dir, *dest)
             logger.info('Copying resource to \'%s\'...' % dest_file)
-            self._copy_file(source, dest_file)
+            self.fileproc.copy_file(source, dest_file)
 
-    def _copy_header_image(self, config):
+    def _copy_header_image(self):
         """Copy header images if user specified them.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
         original = None
-        root_parts = filter(None, config.url.split('/'))
+        root_parts = filter(None, self.config.url.split('/'))
         files = [
-            os.path.join(config.output_dir,
+            os.path.join(self.config.output_dir,
                          *(root_parts + ['images', 'header-1.jpg'])),
-            os.path.join(config.output_dir,
+            os.path.join(self.config.output_dir,
                          *(root_parts + ['images', 'header-2.jpg']))]
-        if 'header' in self.builder_config:
-            header = self.builder_config['header']
-            if type(header) in types.StringTypes:
-                original = [os.path.join(config.article_dir, header),
-                            os.path.join(config.article_dir, header)]
-            elif isinstance(header, types.ListType) and len(header) >= 2:
-                original = [os.path.join(config.article_dir, header[0]),
-                            os.path.join(config.article_dir, header[1])]
-        if original is None:
-            self._copy_files.append('images/header-1.jpg')
-            self._copy_files.append('images/header-2.jpg')
-        else:
-            logger.info('Copying resource to \'%s\'...' % files[0])
-            self._copy_file(original[0], files[0])
-            logger.info('Copying resource to \'%s\'...' % files[1])
-            self._copy_file(original[1], files[1])
+        self._copy_files.append('images/header-1.jpg')
+        self._copy_files.append('images/header-2.jpg')
 
-    def _copy_template_resources(self, config):
+    def _copy_template_resources(self):
         """Copy resource files.
 
         :param config: site configuration.
         :type config: SiteConfig
         """
-        root_parts = filter(None, config.url.split('/'))
-        dest_dir = os.path.join(config.output_dir, *root_parts)
+        root_parts = filter(None, self.config.url.split('/'))
+        dest_dir = os.path.join(self.config.output_dir, *root_parts)
         for filename in self._copy_files:
             stream = pkg_resources.resource_stream(
                 'zkb', 'templates/default/' + filename)
             dest_filename = os.path.join(dest_dir, *filename.split('/'))
-            logger.info('Copying resource to \'%s\'...' % dest_filename)
-            self._write_stream(dest_filename, stream)
+            self.fileproc.write_stream(dest_filename, stream)
 
-    def _do_build(self, config):
-        self._add_path_info(config)
-        self._build_special_pages(config)
-        self._build_article_pages(config)
-        self._build_archive_pages(config)
-        self._build_tags_page(config)
-        self._build_index_pages(config)
-        self._copy_resources(config)
-        self._copy_header_image(config)
-        self._copy_template_resources(config)
+    def _do_build(self):
+        self._add_path_info()
+        self._build_special_pages()
+        self._build_article_pages()
+        self._build_archive_pages()
+        self._build_tags_page()
+        self._build_index_pages()
+        self._copy_resources()
+        self._copy_header_image()
+        self._copy_template_resources()
         return 0
