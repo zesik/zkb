@@ -100,6 +100,10 @@ class SiteConfig(ConfigBase):
         '_site',
         'Directory where all generated files are placed.',
         ConfigItem.PRIVATE)
+    _template_dir = ConfigItem(
+        '_template',
+        'Directory where all template files are places.',
+        ConfigItem.PRIVATE)
     _git_remote = ConfigItem(
         'http://example.com/blog.git',
         'Git remote repository where blog source is stored (on \'source\' '
@@ -201,6 +205,7 @@ class SiteConfig(ConfigBase):
         self.subtitle = SiteConfig._subtitle.default
         self.article_dir = SiteConfig._article_dir.default
         self.output_dir = SiteConfig._output_dir.default
+        self.template_dir = SiteConfig._template_dir.default
         self.git_remote = SiteConfig._git_remote.default
         self.author = SiteConfig._author.default
         self.email = SiteConfig._email.default
