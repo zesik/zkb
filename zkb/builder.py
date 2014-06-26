@@ -18,7 +18,7 @@ from itertools import tee, islice, chain, izip
 
 import pkg_resources
 from slugify import slugify
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, PackageLoader, FileSystemLoader, ChoiceLoader
 
 from zkb.readers import HeaderedContentReader
 from zkb.bodygenerators import BodyGenerator, SUPPORTED_GENERATOR_EXTENSIONS
@@ -65,9 +65,11 @@ class FileProcessor(object):
         return all_article_files
 
     def read(self, filename):
+        logger.debug('Reading from \'%s\'...' % filename)
         return open(filename, 'r')
 
     def write(self, filename, encoding, content):
+        logger.debug('Writing to \'%s\'...' % filename)
         dest_dir = os.path.dirname(filename)
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
@@ -75,6 +77,7 @@ class FileProcessor(object):
             f.write(content.encode(encoding))
 
     def write_stream(self, filename, stream):
+        logger.debug('Writing to \'%s\' with stream...' % filename)
         dest_dir = os.path.dirname(filename)
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
@@ -82,10 +85,15 @@ class FileProcessor(object):
             f.write(stream.read())
 
     def copy_file(self, source, destination):
+        logger.debug('Copying \'%s\' to \'%s\'...' % (source, destination))
         dest_dir = os.path.dirname(destination)
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         shutil.copy2(source, destination)
+
+    def exists(self, file):
+        logger.debug('Checking file \'%s\'...' % (file))
+        return os.path.isfile(file)
 
 
 class SiteBuilder(object):
@@ -218,12 +226,9 @@ def _get_safe_tag_url(value):
 class DefaultSiteBuilder(SiteBuilder):
     def __init__(self, config, fileproc):
         super(DefaultSiteBuilder, self).__init__(config, fileproc)
-        self._load_templates()
-        self._copy_files = [
-            'stylesheets/style.css',
-            'stylesheets/codeblock.css']
+        self._load_resources()
 
-    def _load_templates(self):
+    def _load_resources(self):
         def _format_date(value, date_format='medium'):
             if date_format == 'short':
                 return value.strftime('%Y-%m-%d')
@@ -237,9 +242,10 @@ class DefaultSiteBuilder(SiteBuilder):
         def _rot13(value):
             return codecs.encode(value, 'rot_13')
 
-        env = Environment(loader=PackageLoader('zkb', 'templates/default'),
-                          trim_blocks=True,
-                          lstrip_blocks=True)
+        loader = ChoiceLoader([
+            FileSystemLoader(self.config.template_dir),
+            PackageLoader('zkb', 'templates/default')])
+        env = Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
         env.filters['date'] = _format_date
         env.filters['rot13'] = _rot13
         env.filters['safe_url'] = _get_safe_tag_url
@@ -247,6 +253,19 @@ class DefaultSiteBuilder(SiteBuilder):
         self.index_template = env.get_template('index.html')
         self.archive_template = env.get_template('archive.html')
         self.tags_templates = env.get_template('tags.html')
+        resource_files = [
+            'stylesheets/style.css',
+            'stylesheets/codeblock.css',
+            'images/header-1.jpg',
+            'images/header-2.jpg']
+        self._package_resources = []
+        self._fs_resources = []
+        for item in resource_files:
+            if self.fileproc.exists(os.path.join(
+                    self.config.template_dir, *item.split('/'))):
+                self._fs_resources.append(item)
+            else:
+                self._package_resources.append(item)
 
     def _add_path_info(self):
         """Add info of path and output directory for each article.
@@ -258,25 +277,26 @@ class DefaultSiteBuilder(SiteBuilder):
         # Add path info for special pages
         for article_type, article in self.config.special_articles.iteritems():
             if article_type == ArticleConfig.ABOUT_PAGE:
-                article.url = self.config.url + ArticleConfig.ABOUT_PAGE + '/'
+                article.url = self.config.url + ArticleConfig.ABOUT_PAGE + \
+                    '/' + _INDEX_PAGE
                 article.output_file = os.path.join(
                     self.config.output_dir,
                     *(root_parts + [ArticleConfig.ABOUT_PAGE, _INDEX_PAGE]))
                 self.config.about_url = article.url
             elif article_type == ArticleConfig.NOT_FOUND_PAGE:
                 if len(article.url) == 0:
-                    article.url = '/'
+                    article.url = self.config.url + _404_PAGE
                 article.output_file = os.path.join(
                     self.config.output_dir,
-                    *(root_parts + filter(None, article.url.split('/')) +
-                      [_404_PAGE]))
+                    *(root_parts + filter(None, article.url.split('/'))))
         # Add path info for articles
         for article in self.config.articles_by_date:
             path_parts = ['%d' % article.date.year,
                           '%02d' % article.date.month,
                           '%02d' % article.date.day,
                           article.slug]
-            article.url = self.config.url + '/'.join(path_parts) + '/'
+            article.url = self.config.url + '/'.join(path_parts) + \
+                '/' + _INDEX_PAGE
             article.output_file = os.path.join(
                 self.config.output_dir,
                 *(root_parts + path_parts + [_INDEX_PAGE]))
@@ -288,7 +308,7 @@ class DefaultSiteBuilder(SiteBuilder):
         :type config: SiteConfig
         """
         for _, article in self.config.special_articles.iteritems():
-            logger.info('Rendering special page: %s...' % article.article_type)
+            logger.info('Rendering \'%s\'...' % article.url)
             output = self.article_template.render({
                 'site': self.config,
                 'article': article,
@@ -330,13 +350,14 @@ class DefaultSiteBuilder(SiteBuilder):
                 dest_file = os.path.join(
                     self.config.output_dir,
                     *(root_parts + ['archive', _INDEX_PAGE]))
-                dest_url = self.config.url + 'archive/'
+                dest_url = self.config.url + 'archive/' + _INDEX_PAGE
             else:
                 safe_dir = _get_safe_tag_url(tag)
                 dest_file = os.path.join(
                     self.config.output_dir,
                     *(root_parts + ['tags', safe_dir, _INDEX_PAGE]))
-                dest_url = self.config.url + 'tags/' + safe_dir + '/'
+                dest_url = self.config.url + 'tags/' + safe_dir + \
+                    '/' + _INDEX_PAGE
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.archive_template.render({
                 'site': self.config,
@@ -353,7 +374,7 @@ class DefaultSiteBuilder(SiteBuilder):
         root_parts = filter(None, self.config.url.split('/'))
         dest_file = os.path.join(self.config.output_dir,
                                  *(root_parts + ['tags', _INDEX_PAGE]))
-        dest_url = self.config.url + 'tags/'
+        dest_url = self.config.url + 'tags/' + _INDEX_PAGE
         logger.info('Rendering \'%s\'...' % dest_url)
         output = self.tags_templates.render({
             'site': self.config,
@@ -374,12 +395,13 @@ class DefaultSiteBuilder(SiteBuilder):
             if index == 0:
                 dest_file = os.path.join(self.config.output_dir,
                                          *(root_parts + [_INDEX_PAGE]))
-                dest_url = self.config.url
+                dest_url = self.config.url + _INDEX_PAGE
             else:
                 dest_file = os.path.join(
                     self.config.output_dir,
                     *(root_parts + ['page', str(index + 1), _INDEX_PAGE]))
-                dest_url = self.config.url + 'page/' + str(index + 1) + '/'
+                dest_url = self.config.url + 'page/' + str(index + 1) + \
+                    '/' + _INDEX_PAGE
             if index == 0:
                 prev_url = ''
             elif index == 1:
@@ -420,24 +442,9 @@ class DefaultSiteBuilder(SiteBuilder):
             resources.update(article.full['local_references'])
         for source, dest in resources.iteritems():
             dest_file = os.path.join(self.config.output_dir, *dest)
-            logger.info('Copying resource to \'%s\'...' % dest_file)
+            url = self.config.url + '/'.join(*dest)
+            logger.info('Writing resource \'%s\'...' % url)
             self.fileproc.copy_file(source, dest_file)
-
-    def _copy_header_image(self):
-        """Copy header images if user specified them.
-
-        :param config: site configuration.
-        :type config: SiteConfig
-        """
-        original = None
-        root_parts = filter(None, self.config.url.split('/'))
-        files = [
-            os.path.join(self.config.output_dir,
-                         *(root_parts + ['images', 'header-1.jpg'])),
-            os.path.join(self.config.output_dir,
-                         *(root_parts + ['images', 'header-2.jpg']))]
-        self._copy_files.append('images/header-1.jpg')
-        self._copy_files.append('images/header-2.jpg')
 
     def _copy_template_resources(self):
         """Copy resource files.
@@ -447,7 +454,15 @@ class DefaultSiteBuilder(SiteBuilder):
         """
         root_parts = filter(None, self.config.url.split('/'))
         dest_dir = os.path.join(self.config.output_dir, *root_parts)
-        for filename in self._copy_files:
+        for filename in self._fs_resources:
+            logger.info('Writing resource \'%s\'...' %
+                        (self.config.url + filename))
+            self.fileproc.copy_file(
+                os.path.join(self.config.template_dir, *filename.split('/')),
+                os.path.join(dest_dir, *filename.split('/')))
+        for filename in self._package_resources:
+            logger.info('Writing resource \'%s\'...' %
+                        (self.config.url + filename))
             stream = pkg_resources.resource_stream(
                 'zkb', 'templates/default/' + filename)
             dest_filename = os.path.join(dest_dir, *filename.split('/'))
@@ -461,6 +476,5 @@ class DefaultSiteBuilder(SiteBuilder):
         self._build_tags_page()
         self._build_index_pages()
         self._copy_resources()
-        self._copy_header_image()
         self._copy_template_resources()
         return 0
