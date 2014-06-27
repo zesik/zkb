@@ -16,9 +16,11 @@ import subprocess
 import SocketServer
 import SimpleHTTPServer
 import webbrowser
+import pkg_resources
 
 from zkb.readers import HeaderedContentReader
 from zkb.builder import SiteBuilder
+from zkb.builder import FileProcessor
 from zkb.config import SiteConfig
 from zkb.log import logger
 
@@ -86,6 +88,30 @@ def init_git(args):
     logger.info('Git repository initialized.')
 
 
+def customize(args):
+    config = _load_config(args.config)
+    template_dir = os.path.realpath(config.template_dir)
+    template_files = [
+        'archive.html',
+        'article.html',
+        'footer.html',
+        'header.html',
+        'index.html',
+        'tags.html',
+        'images/header-1.jpg',
+        'images/header-2.jpg',
+        'stylesheets/style.css',
+        'stylesheets/codeblock.css']
+    logger.info('Writing templates...')
+    fileproc = FileProcessor()
+    for file in template_files:
+        stream = pkg_resources.resource_stream(
+            'zkb', 'templates/default/' + file)
+        fileproc.write_stream(
+            os.path.join(template_dir, *file.split('/')), stream)
+    logger.info('All done.')
+
+
 def build(args):
     config = _load_config(args.config)
     result = SiteBuilder.from_config(config).build()
@@ -143,6 +169,11 @@ def main():
         'init-git', help='initialize git repository for the blog')
     init_git_parser.add_argument('config', **config_param)
     init_git_parser.set_defaults(func=init_git)
+    # `customize' command
+    customize_parser = subparsers.add_parser(
+        'customize', help='write templates for customization')
+    customize_parser.add_argument('config', **config_param)
+    customize_parser.set_defaults(func=customize)
     # `build' command
     build_parser = subparsers.add_parser(
         'build', help='build blog')
