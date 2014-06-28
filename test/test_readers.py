@@ -49,6 +49,8 @@ class TestYamlReader(unittest.TestCase):
                 u'\n'
                 u'アーティカル。\n'
                 u'--MORE--\n'
+                u'詳しい内容。\n'
+                u'--MORE--\n'
                 u'詳しい内容。\n')
         output.write(data.encode('utf-8', 'replace'))
         return output
@@ -242,6 +244,8 @@ class TestYamlReader(unittest.TestCase):
                                        u'テスト。文章。\n'
                                        u'\n'
                                        u'アーティカル。\n'
+                                       u'詳しい内容。\n'
+                                       u'--MORE--\n'
                                        u'詳しい内容。')
         self.assertEqual(result[4][2], u'中文正文。\n'
                                        u'测试。文章。\n'
