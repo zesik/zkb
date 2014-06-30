@@ -10,7 +10,7 @@ This is the unit test file for readers.
 """
 
 import unittest
-import cStringIO
+import io
 
 from zkb.readers import *
 from zkb.utils import *
@@ -18,7 +18,7 @@ from zkb.utils import *
 
 class TestYamlReader(unittest.TestCase):
     def _create_stream_h_utf8(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'encoding: utf-8\n'
                 u'title: english 中文日本語言葉叶子\n'
                 u'\n')
@@ -26,14 +26,14 @@ class TestYamlReader(unittest.TestCase):
         return output
 
     def _create_stream_h_gb18030(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'encoding: gb18030\n'
                 u'title: 中文标题\n')
         output.write(data.encode('gb18030', 'replace'))
         return output
 
     def _create_stream_h_euc_jp(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'encoding: euc-jp\n'
                 u'title: 日本語言葉\n'
                 u'\n')
@@ -41,7 +41,7 @@ class TestYamlReader(unittest.TestCase):
         return output
 
     def _create_stream_f_utf8(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'title: 中文日本語言葉叶子\n'
                 u'\n'
                 u'コンテンツ。\n'
@@ -56,7 +56,7 @@ class TestYamlReader(unittest.TestCase):
         return output
 
     def _create_stream_f_gb18030(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'encoding: gb18030\n'
                 u'title: 中文标题\n'
                 u'\n'
@@ -70,7 +70,7 @@ class TestYamlReader(unittest.TestCase):
         return output
 
     def _create_stream_f_euc_jp(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'encoding: euc-jp\n'
                 u'title: 日本語言葉\n'
                 u'\n'
@@ -84,14 +84,14 @@ class TestYamlReader(unittest.TestCase):
         return output
 
     def _create_stream_h_unk(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'encoding: fake-encoding\n'
                 u'title: fake-encoding\n')
         output.write(data.encode('utf-8', 'replace'))
         return output
 
     def _create_stream_fm_utf8(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'title: Title\n'
                 u'more_separator: --CUSTOMIZED-MORE-SEPARATOR--\n'
                 u'\n'
@@ -107,7 +107,7 @@ class TestYamlReader(unittest.TestCase):
         return output
 
     def _create_stream_fnm_utf8(self):
-        output = cStringIO.StringIO()
+        output = io.BytesIO()
         data = (u'title: Title\n'
                 u'more_separator: --CUSTOMIZED-MORE-SEPARATOR--\n'
                 u'\n'
