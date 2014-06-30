@@ -32,6 +32,8 @@ _404_PAGE = '404.html'
 
 
 class FileProcessor(object):
+    _ARTICLE_HEADER_TYPE = 'yaml'
+
     """Actual handler of file operation.
     """
 
@@ -59,7 +61,9 @@ class FileProcessor(object):
                     continue
                 item = (full_path,
                         os.path.splitext(filename)[0],
-                        SiteBuilder._ARTICLE_HEADER_TYPE,
+                        datetime.datetime.fromtimestamp(
+                            os.path.getmtime(full_path)),
+                        FileProcessor._ARTICLE_HEADER_TYPE,
                         None)
                 all_article_files.append(item)
         return all_article_files
@@ -106,15 +110,16 @@ class SiteBuilder(object):
     :param fileproc: file processor.
     :type fileproc: FileProcessor
     """
-    _ARTICLE_HEADER_TYPE = 'yaml'
-
-    def __init__(self, config, fileproc):
+    def __init__(self, config, fileproc=None):
         super(SiteBuilder, self).__init__()
         self.config = config
-        self.fileproc = fileproc
+        if fileproc is None:
+            self.fileproc = FileProcessor()
+        else:
+            self.fileproc = fileproc
 
     @classmethod
-    def from_config(cls, config):
+    def from_config(cls, config, fileproc=None):
         name = config.site_builder
         if type(name) not in types.StringTypes or len(name) == 0:
             name = DefaultSiteBuilder.__name__
@@ -122,7 +127,7 @@ class SiteBuilder(object):
             constructor = globals()[name]
         except KeyError:
             raise UnknownBuilderError(name)
-        return constructor(config, FileProcessor())
+        return constructor(config, fileproc)
 
     def build(self):
         """Main logic for building the site.
@@ -130,7 +135,7 @@ class SiteBuilder(object):
         articles_by_date = []
         articles_by_tag = {}
         special_articles = {}
-        for full_path, filename, header_type, content_type in \
+        for full_path, filename, mtime, header_type, content_type in \
                 self.fileproc.get_article_files(
                         self.config.article_dir, [self.config.output_dir]):
             # Read article
@@ -167,8 +172,7 @@ class SiteBuilder(object):
                     article.date, datetime.time(0, 0))
             elif not isinstance(article.date, datetime.datetime):
                 if len(article.date) == 0:
-                    article.date = datetime.datetime.fromtimestamp(
-                        os.path.getmtime(full_path))
+                    article.date = mtime
                 else:
                     article.date = datetime.datetime.strptime(
                         article.date, self.config.date_format)
@@ -224,7 +228,7 @@ def _get_safe_tag_url(value):
 
 
 class DefaultSiteBuilder(SiteBuilder):
-    def __init__(self, config, fileproc):
+    def __init__(self, config, fileproc=None):
         super(DefaultSiteBuilder, self).__init__(config, fileproc)
         self._load_resources()
 
