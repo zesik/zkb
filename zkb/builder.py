@@ -14,6 +14,7 @@ import codecs
 import os
 import shutil
 import types
+import sys
 from itertools import tee, islice, chain, izip
 
 import pkg_resources
@@ -121,11 +122,25 @@ class SiteBuilder(object):
     @classmethod
     def from_config(cls, config, fileproc=None):
         name = config.site_builder
-        if type(name) not in types.StringTypes or len(name) == 0:
-            name = DefaultSiteBuilder.__name__
         try:
-            constructor = globals()[name]
+            if type(name) not in types.StringTypes or len(name) == 0:
+                module = sys.modules[__name__]
+                builder = DefaultSiteBuilder.__name__
+            else:
+                names = name.split('/', 2)
+                if len(names) == 2:
+                    module = getattr(__import__(names[0]),
+                                     names[0][names[0].rfind('.') + 1:])
+                    builder = names[1]
+                else:
+                    module = sys.modules[__name__]
+                    builder = name
+            constructor = module
+            for c in builder.split('.'):
+                constructor = getattr(constructor, c)
         except KeyError:
+            raise UnknownBuilderError(name)
+        except ImportError:
             raise UnknownBuilderError(name)
         return constructor(config, fileproc)
 
