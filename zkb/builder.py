@@ -214,6 +214,8 @@ class SiteBuilder(object):
                     articles_by_tag[tag] = []
                 articles_by_tag[tag].append(article)
         articles_by_date.sort(key=lambda article: article.date, reverse=True)
+        for tag, articles in articles_by_tag.iteritems():
+            articles.sort(key=lambda article: article.date, reverse=True)
         self.config.articles_by_date = articles_by_date
         self.config.articles_by_tag = articles_by_tag
         self.config.special_articles = special_articles
