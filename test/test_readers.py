@@ -128,28 +128,31 @@ class TestYamlReader(unittest.TestCase):
 
     def _verify_headers(self, result):
         self.assertEqual(result[0][0]['encoding'], 'utf-8',
-                         'encoding is not correctly read')
+                         'encoding should be correctly read as utf-8')
         self.assertEqual(result[1][0]['encoding'], 'gb18030',
-                         'encoding is not correctly read')
+                         'encoding should be correctly read as gb18030')
         self.assertEqual(result[2][0]['encoding'], 'euc-jp',
-                         'encoding is not correctly read')
-        self.assertFalse('encoding' in result[3][0])
+                         'encoding should be correctly read as euc-jp')
+        self.assertFalse('encoding' in result[3][0],
+                         'encoding should not be included in the result if '
+                         'not specified')
         self.assertEqual(result[4][0]['encoding'], 'gb18030',
-                         'encoding is not correctly read')
+                         'encoding should be correctly read as gb-18030')
         self.assertEqual(result[5][0]['encoding'], 'euc-jp',
-                         'encoding is not correctly read')
+                         'encoding should be correctly read as euc-jp')
         self.assertEqual(result[0][0]['title'], u'english 中文日本語言葉叶子',
-                         'title is not correctly read')
+                         'title should be corrected decoded with utf-8')
         self.assertEqual(result[1][0]['title'], u'中文标题',
-                         'title is not correctly read')
+                         'title should be corrected decoded with gb18030')
         self.assertEqual(result[2][0]['title'], u'日本語言葉',
-                         'title is not correctly read')
+                         'title should be corrected decoded with euc-jp')
         self.assertEqual(result[3][0]['title'], u'中文日本語言葉叶子',
-                         'title is not correctly read')
+                         'title should be corrected decoded with default '
+                         'encoding')
         self.assertEqual(result[4][0]['title'], u'中文标题',
-                         'title is not correctly read')
+                         'title should be corrected decoded with gb-18030')
         self.assertEqual(result[5][0]['title'], u'日本語言葉',
-                         'title is not correctly read')
+                         'title should be corrected decoded with euc-jp')
 
     def test_read_unsupported_encoding(self):
         reader = YamlHeaderedContentReader()
@@ -158,7 +161,8 @@ class TestYamlReader(unittest.TestCase):
             reader.read(s)
         self._destroy_buffers([s])
         self.assertEqual(e.exception.encoding, 'fake-encoding',
-                         'encoding incorrect')
+                         'unknown encoding should throw exception with '
+                         'encoding name')
 
     def test_read_header_only(self):
         reader = YamlHeaderedContentReader()
@@ -177,12 +181,24 @@ class TestYamlReader(unittest.TestCase):
         self._destroy_buffers(s)
 
         self._verify_headers(result)
-        self.assertIsNone(result[0][1], 'content is not None')
-        self.assertIsNone(result[1][1], 'content is not None')
-        self.assertIsNone(result[2][1], 'content is not None')
-        self.assertIsNone(result[3][1], 'content is not None')
-        self.assertIsNone(result[4][1], 'content is not None')
-        self.assertIsNone(result[5][1], 'content is not None')
+        self.assertIsNone(result[0][1],
+                          'content should be none if requesting to read '
+                          'header only')
+        self.assertIsNone(result[1][1],
+                          'content should be none if requesting to read '
+                          'header only')
+        self.assertIsNone(result[2][1],
+                          'content should be none if requesting to read '
+                          'header only')
+        self.assertIsNone(result[3][1],
+                          'content should be none if requesting to read '
+                          'header only')
+        self.assertIsNone(result[4][1],
+                          'content should be none if requesting to read '
+                          'header only')
+        self.assertIsNone(result[5][1],
+                          'content should be none if requesting to read '
+                          'header only')
 
     def test_read_entire_file(self):
         reader = YamlHeaderedContentReader()
@@ -205,65 +221,103 @@ class TestYamlReader(unittest.TestCase):
         self._destroy_buffers(s)
 
         self._verify_headers(result)
-        self.assertIsNotNone(result[0][2], 'content is None')
-        self.assertIsNotNone(result[1][2], 'content is None')
-        self.assertIsNotNone(result[2][2], 'content is None')
-        self.assertIsNotNone(result[3][2], 'content is None')
-        self.assertIsNotNone(result[4][2], 'content is None')
-        self.assertIsNotNone(result[5][2], 'content is None')
-        self.assertIsNotNone(result[6][2], 'content is None')
-        self.assertIsNotNone(result[7][2], 'content is None')
+        self.assertIsNotNone(result[0][2],
+                             'content should be none if requesting to read '
+                             'entire file')
+        self.assertIsNotNone(result[1][2],
+                             'content should be none if requesting to read '
+                             'entire file')
+        self.assertIsNotNone(result[2][2],
+                             'content should be none if requesting to read '
+                             'entire file')
+        self.assertIsNotNone(result[3][2],
+                             'content should be none if requesting to read '
+                             'entire file')
+        self.assertIsNotNone(result[4][2],
+                             'content should be none if requesting to read '
+                             'entire file')
+        self.assertIsNotNone(result[5][2],
+                             'content should be none if requesting to read '
+                             'entire file')
+        self.assertIsNotNone(result[6][2],
+                             'content should be none if requesting to read '
+                             'entire file')
+        self.assertIsNotNone(result[7][2],
+                             'content should be none if requesting to read '
+                             'entire file')
 
-        self.assertIsNone(result[0][1], 'abstract is not None')
-        self.assertIsNone(result[1][1], 'abstract is not None')
-        self.assertIsNone(result[2][1], 'abstract is not None')
+        self.assertIsNone(result[0][1],
+                          'abstract should be none if no separator detected')
+        self.assertIsNone(result[1][1],
+                          'abstract should be none if no separator detected')
+        self.assertIsNone(result[2][1],
+                          'abstract should be none if no separator detected')
         self.assertEqual(result[3][1], u'コンテンツ。\n'
                                        u'テスト。文章。\n'
                                        u'\n'
-                                       u'アーティカル。')
+                                       u'アーティカル。',
+                         'abstract should be correctly parsed when separator '
+                         'detected')
         self.assertEqual(result[4][1], u'中文正文。\n'
                                        u'测试。文章。\n'
                                        u'\n'
-                                       u'文章。')
+                                       u'文章。',
+                         'abstract should be correctly parsed when separator '
+                         'detected')
         self.assertEqual(result[5][1], u'コンテンツ。\n'
                                        u'テスト。文章。\n'
                                        u'\n'
-                                       u'アーティカル。')
+                                       u'アーティカル。',
+                         'abstract should be correctly parsed when separator '
+                         'detected')
         self.assertEqual(result[6][1], u'Contents.\n'
                                        u'Article\n'
                                        u'\n'
                                        u'Article\n'
                                        u'--MORE--\n'
-                                       u'Here should belong to abstract.')
-        self.assertIsNone(result[7][1], 'abstract is not None')
+                                       u'Here should belong to abstract.',
+                         'abstract should be correctly parsed when separator '
+                         'detected')
+        self.assertIsNone(result[7][1],
+                          'abstract should be none if no separator detected')
 
-        self.assertEqual(result[0][2], '')
-        self.assertEqual(result[1][2], '')
-        self.assertEqual(result[2][2], '')
+        self.assertEqual(result[0][2], '', 'content should be empty')
+        self.assertEqual(result[1][2], '', 'content should be empty')
+        self.assertEqual(result[2][2], '', 'content should be empty')
         self.assertEqual(result[3][2], u'コンテンツ。\n'
                                        u'テスト。文章。\n'
                                        u'\n'
                                        u'アーティカル。\n'
                                        u'詳しい内容。\n'
                                        u'--MORE--\n'
-                                       u'詳しい内容。')
+                                       u'詳しい内容。',
+                         'content should be correctly parsed and if more than '
+                         'one separator is detected, the latter one should '
+                         'not be deleted')
         self.assertEqual(result[4][2], u'中文正文。\n'
                                        u'测试。文章。\n'
                                        u'\n'
                                        u'文章。\n'
-                                       u'详细正文。')
+                                       u'详细正文。',
+                         'content should be correctly parsed and first '
+                         'separator should be removed')
         self.assertEqual(result[5][2], u'コンテンツ。\n'
                                        u'テスト。文章。\n'
                                        u'\n'
                                        u'アーティカル。\n'
-                                       u'詳しい内容。')
+                                       u'詳しい内容。',
+                         'content should be correctly parsed and first '
+                         'separator should be removed')
         self.assertEqual(result[6][2], u'Contents.\n'
                                        u'Article\n'
                                        u'\n'
                                        u'Article\n'
                                        u'--MORE--\n'
                                        u'Here should belong to abstract.\n'
-                                       u'Here should belong to full article.')
+                                       u'Here should belong to full article.',
+                         'content should be correctly parsed and first '
+                         'customized separator should be removed while '
+                         'default separator should remain in the content')
         self.assertEqual(result[7][2], u'Contents.\n'
                                        u'Article\n'
                                        u'\n'
@@ -271,4 +325,7 @@ class TestYamlReader(unittest.TestCase):
                                        u'--MORE--\n'
                                        u'Here should belong to full article.\n'
                                        u'--MORE--\n'
-                                       u'Here should belong to full article.')
+                                       u'Here should belong to full article.',
+                         'content should be correctly parsed and default '
+                         'separator should remain in the content when '
+                         'customize separator is found')
