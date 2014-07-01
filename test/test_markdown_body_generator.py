@@ -63,9 +63,11 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
         self.assertEqual(result,
                          '<p>An <a href="http://example.com/">example link'
                          '</a></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for external links')
         self.assertEqual(len(req['local_references']), 0,
-                         'local ref incorrect.')
+                         'generator should not include local reference when '
+                         'local file is not detected')
 
     def test_external_inline_image_link(self):
         gen = MarkdownBodyGenerator()
@@ -75,9 +77,11 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
         self.assertEqual(result,
                          '<p>An <img alt="example image" '
                          'src="http://example.com/image.png"></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for external image')
         self.assertEqual(len(req['local_references']), 0,
-                         'local ref incorrect.')
+                         'generator should not include local reference when '
+                         'local file is not detected')
 
     def test_external_ref_link(self):
         gen = MarkdownBodyGenerator()
@@ -87,9 +91,11 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
         self.assertEqual(result,
                          '<p>An <a href="http://example.com/">example link'
                          '</a></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for external link (reference format)')
         self.assertEqual(len(req['local_references']), 0,
-                         'local ref incorrect.')
+                         'generator should not include local reference when '
+                         'local file is not detected')
 
     def test_external_ref_image(self):
         gen = MarkdownBodyGenerator()
@@ -99,9 +105,11 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
         self.assertEqual(result,
                          '<p>An <img alt="example image" '
                          'src="http://example.com/image.png"></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for external image (reference format)')
         self.assertEqual(len(req['local_references']), 0,
-                         'local ref incorrect.')
+                         'generator should not include local reference when '
+                         'local file is not detected')
 
     def test_external_short_ref_link(self):
         gen = MarkdownBodyGenerator()
@@ -111,9 +119,11 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
         self.assertEqual(result,
                          '<p>An <a href="http://example.com/">example link'
                          '</a></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for external link (short reference format)')
         self.assertEqual(len(req['local_references']), 0,
-                         'local ref incorrect.')
+                         'generator should not include local reference when '
+                         'local file is not detected')
 
     def test_local_inline_link(self):
         gen = MarkdownBodyGenerator()
@@ -128,11 +138,14 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
                          '<p>An <a href="/' + '/'.join(out) +
                          '">local file link'
                          '</a></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for local file link')
         self.assertEqual(len(req['local_references']), 1,
-                         'local ref incorrect.')
-        self.assertEqual(req['local_references'][abs_infile],
-                         out, 'local ref incorrect.')
+                         'generator should include local reference when '
+                         'local file is detected')
+        self.assertEqual(req['local_references'][abs_infile], out,
+                         'generator should not include local reference when '
+                         'local file is detected')
 
     def test_local_inline_image_link(self):
         gen = MarkdownBodyGenerator()
@@ -146,9 +159,11 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
         self.assertEqual(result,
                          '<p>An <img alt="local image" '
                          'src="/' + '/'.join(out) + '"></p>',
-                         'markdown output mismatch')
-        self.assertEqual(req['local_references'][abs_infile],
-                         out, 'local ref incorrect.')
+                         'generator should create markdown content correctly '
+                         'for local image')
+        self.assertEqual(req['local_references'][abs_infile], out,
+                         'generator should include local reference when '
+                         'local file is detected')
 
     def test_local_ref_link(self):
         gen = MarkdownBodyGenerator()
@@ -164,11 +179,14 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
                          '<p>An <a href="/' + '/'.join(out) +
                          '">local file link'
                          '</a></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for local file link (reference format)')
         self.assertEqual(len(req['local_references']), 1,
-                         'local ref incorrect.')
-        self.assertEqual(req['local_references'][abs_infile],
-                         out, 'local ref incorrect.')
+                         'generator should include local reference when '
+                         'local file is detected')
+        self.assertEqual(req['local_references'][abs_infile], out,
+                         'generator should include local reference when '
+                         'local file is detected')
 
     def test_local_ref_image_link(self):
         gen = MarkdownBodyGenerator()
@@ -183,9 +201,11 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
         self.assertEqual(result,
                          '<p>An <img alt="local image" '
                          'src="/' + '/'.join(out) + '"></p>',
-                         'markdown output mismatch')
-        self.assertEqual(req['local_references'][abs_infile],
-                         out, 'local ref incorrect.')
+                         'generator should create markdown content correctly '
+                         'for local image (reference format)')
+        self.assertEqual(req['local_references'][abs_infile], out,
+                         'generator should include local reference when '
+                         'local file is detected')
 
     def test_local_short_ref_link(self):
         gen = MarkdownBodyGenerator()
@@ -201,11 +221,14 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
                          '<p>An <a href="/' + '/'.join(out) +
                          '">local file link'
                          '</a></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for local file link (short reference format)')
         self.assertEqual(len(req['local_references']), 1,
-                         'local ref incorrect.')
-        self.assertEqual(req['local_references'][abs_infile],
-                         out, 'local ref incorrect.')
+                         'generator should include local reference when '
+                         'local file is detected')
+        self.assertEqual(req['local_references'][abs_infile], out,
+                         'generator should include local reference when '
+                         'local file is detected')
 
     def test_multiple_local_ref_link(self):
         gen = MarkdownBodyGenerator()
@@ -238,10 +261,15 @@ class TestMarkdownBodyGenerator(unittest.TestCase):
                          '<p>Same <a href="/' + '/'.join(out3) +
                          '">filename'
                          '</a></p>',
-                         'markdown output mismatch')
+                         'generator should create markdown content correctly '
+                         'for multiple local references')
         self.assertEqual(len(req['local_references']), 2,
-                         'local ref incorrect.')
-        self.assertEqual(req['local_references'][abs_infile1],
-                         out1, 'local ref incorrect.')
-        self.assertEqual(req['local_references'][abs_infile2],
-                         out2, 'local ref incorrect.')
+                         'generator should include correct copies of local '
+                         'reference when multiple local files are detected')
+        self.assertEqual(req['local_references'][abs_infile1], out1,
+                         'generator should include local reference when '
+                         'local file is detected')
+        self.assertEqual(req['local_references'][abs_infile2], out2,
+                         'generator should include local reference when '
+                         'local file is detected')
+
