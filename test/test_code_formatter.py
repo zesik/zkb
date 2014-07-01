@@ -52,7 +52,8 @@ class TestCodeFormatter(unittest.TestCase):
                           '        })\n'
                           '</pre></div>\n'
                           '</td></tr></table></figure>'),
-                         'source code output not match.')
+                         'formatter should format source code correctly with '
+                         'default config')
 
     def test_code_formatting_nolineno(self):
         body = ('Test basic code block\n\n'
@@ -75,7 +76,8 @@ class TestCodeFormatter(unittest.TestCase):
                           '           &#39;code&#39;: CodeBlockHtmlFormatter()'
                           '\n        })\n'
                           '</pre></div>\n</figure>'),
-                         'source code output not match.')
+                         'formatter should format source code correctly with '
+                         'no line number')
 
     def test_code_formatting_lang(self):
         body = ('Test basic code block\n\n'
@@ -122,7 +124,8 @@ class TestCodeFormatter(unittest.TestCase):
                           '        <span class="p">})</span>\n'
                           '</pre></div>\n'
                           '</td></tr></table></figure>'),
-                         'source code output not match.')
+                         'formatter should format source code correctly with '
+                         'specified language')
 
     def test_code_formatting_lang_nolinenos(self):
         body = ('Test basic code block\n\n'
@@ -160,7 +163,8 @@ class TestCodeFormatter(unittest.TestCase):
                           '        <span class="p">})</span>\n'
                           '</pre></div>\n'
                           '</figure>'),
-                         'source code output not match.')
+                         'formatter should format source code correctly with '
+                         'specified language and no line number')
 
     def test_code_formatting_lang_linestart(self):
         body = ('Test basic code block\n\n'
@@ -207,7 +211,8 @@ class TestCodeFormatter(unittest.TestCase):
                           '        <span class="p">})</span>\n'
                           '</pre></div>\n'
                           '</td></tr></table></figure>'),
-                         'source code output not match.')
+                         'formatter should format source code correctly with '
+                         'specified language and starting line number')
 
     def test_code_formatting_lang_linestart_mark(self):
         body = ('Test basic code block\n\n'
@@ -265,7 +270,8 @@ class TestCodeFormatter(unittest.TestCase):
                           '        <span class="p">})</span>\n'
                           '</div></pre></div>\n'
                           '</td></tr></table></figure>'),
-                         'source code output not match.')
+                         'formatter should format source code correctly with '
+                         'specified language, starting line number and marks')
 
     def test_code_formatting_lang_linestart_mark_nolinenos(self):
         body = ('Test basic code block\n\n'
@@ -313,7 +319,8 @@ class TestCodeFormatter(unittest.TestCase):
                           '        <span class="p">})</span>\n'
                           '</div></pre></div>\n'
                           '</figure>'),
-                         'source code output not match.')
+                         'formatter should format source code correctly with '
+                         'specified language and marking without line numbers')
 
     def test_unformatted_code(self):
         body = ('Test basic code block\n\n'
@@ -333,4 +340,4 @@ class TestCodeFormatter(unittest.TestCase):
                           '        return BlockHtmlFormatterExtension({\n'
                           '            \'code\': CodeBlockHtmlFormatter()\n'
                           '        })</code></pre></figure>'),
-                         'source code output not match.')
+                         'formatter should not format source code')
