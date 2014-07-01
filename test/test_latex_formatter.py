@@ -41,7 +41,7 @@ class TestLatexFormatter(unittest.TestCase):
                           '\\dot{y} & = \\rho x - y - xz \\\\'
                           '\\dot{z} & = -\\beta z + xy'
                           '\\end{aligned}\\]</p>'),
-                         'latex output not match.')
+                         'formatter should format latex content correctly')
 
     def test_inline_latex_formatting(self):
         body = 'Test inline $$\\LaTeX$$ block'
@@ -50,7 +50,8 @@ class TestLatexFormatter(unittest.TestCase):
                                    extensions=[self._create_extension()])
         self.assertEqual(result,
                          '<p>Test inline $$\\LaTeX$$ block</p>',
-                         'latex output not match.')
+                         'formatter should format inline latex content '
+                         'correctly')
 
     def test_latex_formatting_unicode(self):
         body = (u'测试 LaTeX 格式化\n\n'
@@ -70,7 +71,8 @@ class TestLatexFormatter(unittest.TestCase):
                           u'\\dot{y} & = \\rho x - y - xz \\\\'
                           u'\\dot{z} & = -\\beta z + xy'
                           u'\\end{aligned}\\]</p>'),
-                         'latex output not match.')
+                         'formatter should format inline latex content with'
+                         'unicode correctly')
 
     def test_no_requisites(self):
         body = 'Test no latex'
@@ -82,7 +84,9 @@ class TestLatexFormatter(unittest.TestCase):
                          '<p>Test no latex</p>',
                          'latex output not match')
         self.assertIsNotNone(ext.get_requisites())
-        self.assertEqual(len(ext.get_requisites()), 0, 'requisites not match')
+        self.assertEqual(len(ext.get_requisites()), 0,
+                         'requisites should not include latex scripts when '
+                         'no latex content detected')
 
     def test_has_requisites(self):
         body = ('Test LaTeX block\n\n'
@@ -105,6 +109,9 @@ class TestLatexFormatter(unittest.TestCase):
                           '\\end{aligned}\\]</p>'),
                          'latex output not match.')
         self.assertIsNotNone(ext.get_requisites())
-        self.assertEqual(len(ext.get_requisites()), 1, 'requisites not match')
+        self.assertEqual(len(ext.get_requisites()), 1,
+                         'requisites should include latex scripts when '
+                         'latex content detected')
         self.assertEqual(len(ext.get_requisites()['header_scripts']), 2,
-                         'requisites not match')
+                         'requisites should include latex scripts when '
+                         'latex content detected')
