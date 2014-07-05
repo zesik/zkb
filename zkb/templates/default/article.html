@@ -6,7 +6,7 @@
         <header>
           <h1>{{ article.title }}</h1>
           {% if article.article_type | length == 0 %}
-          <p class="meta"><time datetime="{{ article.date | date('short') }}">{{ article.date | date }}</time></p>
+          <p class="meta"><time datetime="{{ article.date | date('meta') }}">{{ article.date | date }}</time></p>
           {% endif %}
         </header>
         {{ article.full['html'] | safe }}

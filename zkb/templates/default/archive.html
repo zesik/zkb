@@ -33,7 +33,7 @@
             </div>
             <time datetime="{{ article.date | date }}">
               <span class="full">{{ article.date | date }}</span>
-              <span class="short">{{ article.date | date('md') }}</span>
+              <span class="short">{{ article.date | date('month-day') }}</span>
             </time>
           </article>
             {% endif %}

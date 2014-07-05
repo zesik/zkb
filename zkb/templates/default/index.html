@@ -5,7 +5,7 @@
       <article class="lang-{{ article.language }}">
         <header>
           <h1><a href="{{ article.url }}">{{ article.title }}</a></h1>
-          <p class="meta"><time datetime="{{ article.date | date('short') }}">{{ article.date | date }}</time></p>
+          <p class="meta"><time datetime="{{ article.date | date('meta') }}">{{ article.date | date }}</time></p>
         </header>
         {% if article.abstract is not none %}
         {{ article.abstract['html'] | safe }}

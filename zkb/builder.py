@@ -23,6 +23,7 @@ from jinja2 import Environment, PackageLoader, FileSystemLoader, ChoiceLoader
 
 from zkb.readers import HeaderedContentReader
 from zkb.bodygenerators import BodyGenerator, SUPPORTED_GENERATOR_EXTENSIONS
+from zkb.localization import LocalizationData
 from zkb.utils import UnknownBuilderError
 from zkb.config import SiteConfig, ArticleConfig
 from zkb.log import logger
@@ -111,6 +112,7 @@ class SiteBuilder(object):
     :param fileproc: file processor.
     :type fileproc: FileProcessor
     """
+
     def __init__(self, config, fileproc=None):
         super(SiteBuilder, self).__init__()
         self.config = config
@@ -250,15 +252,23 @@ class DefaultSiteBuilder(SiteBuilder):
         self._load_resources()
 
     def _load_resources(self):
-        def _format_date(value, date_format='medium'):
-            if date_format == 'short':
+        def _format_date(value, date_format='short'):
+            if date_format == 'meta':
                 return value.strftime('%Y-%m-%d')
-            elif date_format == 'medium':
-                return '{0:%b} {0.day}, {0:%Y}'.format(value)
-            elif date_format == 'year':
-                return value.strftime('%Y')
-            elif date_format == 'md':
-                return '{0:%b} {0.day}'.format(value)
+
+            localedata = LocalizationData.from_locale(self.config.locale)
+            date_format = localedata['date-format-%s' % date_format]
+            if date_format is None:
+                return value.strftime('%Y-%m-%d')
+            if date_format == 'normal':
+                month_name = localedata[
+                    'date-format-month-name-full-%d' % value.month]
+            else:
+                month_name = localedata[
+                    'date-format-month-name-abbr-%d' % value.month]
+            if month_name is None:
+                month_name = '%d' % value.month
+            return date_format.format(value.year, month_name, value.day)
 
         def _rot13(value):
             return codecs.encode(value, 'rot_13')
@@ -299,7 +309,7 @@ class DefaultSiteBuilder(SiteBuilder):
         for article_type, article in self.config.special_articles.iteritems():
             if article_type == ArticleConfig.ABOUT_PAGE:
                 article.url = self.config.url + ArticleConfig.ABOUT_PAGE + \
-                    '/' + _INDEX_PAGE
+                              '/' + _INDEX_PAGE
                 article.output_file = os.path.join(
                     self.config.output_dir,
                     *(root_parts + [ArticleConfig.ABOUT_PAGE, _INDEX_PAGE]))
@@ -317,7 +327,7 @@ class DefaultSiteBuilder(SiteBuilder):
                           '%02d' % article.date.day,
                           article.slug]
             article.url = self.config.url + '/'.join(path_parts) + \
-                '/' + _INDEX_PAGE
+                          '/' + _INDEX_PAGE
             article.output_file = os.path.join(
                 self.config.output_dir,
                 *(root_parts + path_parts + [_INDEX_PAGE]))
@@ -378,7 +388,7 @@ class DefaultSiteBuilder(SiteBuilder):
                     self.config.output_dir,
                     *(root_parts + ['tags', safe_dir, _INDEX_PAGE]))
                 dest_url = self.config.url + 'tags/' + safe_dir + \
-                    '/' + _INDEX_PAGE
+                           '/' + _INDEX_PAGE
             logger.info('Rendering \'%s\'...' % dest_url)
             output = self.archive_template.render({
                 'site': self.config,
@@ -422,7 +432,7 @@ class DefaultSiteBuilder(SiteBuilder):
                     self.config.output_dir,
                     *(root_parts + ['page', str(index + 1), _INDEX_PAGE]))
                 dest_url = self.config.url + 'page/' + str(index + 1) + \
-                    '/' + _INDEX_PAGE
+                           '/' + _INDEX_PAGE
             if index == 0:
                 prev_url = ''
             elif index == 1:
