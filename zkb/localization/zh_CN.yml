@@ -1,0 +1,4 @@
+date-format-short: '{0}年{1}月{2}日'
+date-format-normal: '{0}年{1}月{2}日'
+date-format-year: '{0}'
+date-format-month-day: '{1}月{2}日'
