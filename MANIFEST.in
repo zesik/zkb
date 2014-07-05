@@ -4,3 +4,4 @@ include ACKNOWLEDGEMENTS
 recursive-include zkb/templates *.html
 recursive-include zkb/templates *.css
 recursive-include zkb/templates *.jpg
+recursive-include zkb/localization *.yml
