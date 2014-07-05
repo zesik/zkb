@@ -372,7 +372,7 @@ article p code {
   display: none;
 }
 
-.lang-zh-cn, .lang-zh-cn button, .lang-zh-cn input, .lang-zh-cn select, .lang-zh-cn textarea {
+.lang-zh_CN, .lang-zh_CN button, .lang-zh_CN input, .lang-zh_CN select, .lang-zh_CN textarea {
   font-family: "Noto Sans","Helvetica Neue","Helvetica",Helvetica,Arial,"Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei",sans-serif;
 }
 
