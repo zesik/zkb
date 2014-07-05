@@ -142,8 +142,8 @@ class SiteConfig(ConfigBase):
         '%Y-%m-%d %H:%M:%S',
         'Format of date that specified in each article.',
         ConfigItem.NORMAL)
-    _language = ConfigItem(
-        'en',
+    _locale = ConfigItem(
+        'en_US',
         'Language of the blog and article.',
         ConfigItem.NORMAL)
     _copyright = ConfigItem(
@@ -214,7 +214,7 @@ class SiteConfig(ConfigBase):
         self.enable_latex = SiteConfig._enable_latex.default
         self.enable_comments = SiteConfig._enable_comments.default
         self.date_format = SiteConfig._date_format.default
-        self.language = SiteConfig._language.default
+        self.locale = SiteConfig._locale.default
         self.copyright = SiteConfig._copyright.default
         self.page_size = SiteConfig._page_size.default
         self.site_builder = SiteConfig._site_builder.default
@@ -285,8 +285,8 @@ class ArticleConfig(ConfigBase):
         '',
         'Tags of the article.',
         ConfigItem.NORMAL)
-    _language = ConfigItem(
-        'en',
+    _locale = ConfigItem(
+        'en_US',
         'Language of the article.',
         ConfigItem.PRIVATE)
     _article_type = ConfigItem(
@@ -345,7 +345,7 @@ class ArticleConfig(ConfigBase):
         self.content_type = ArticleConfig._content_type.default
         self.encoding = ArticleConfig._encoding.default
         self.date = ArticleConfig._date.default
-        self.language = ArticleConfig._language.default
+        self.locale = ArticleConfig._locale.default
         self.title = ArticleConfig._title.default
         self.author = ArticleConfig._author.default
         self.email = ArticleConfig._email.default
@@ -361,7 +361,7 @@ class ArticleConfig(ConfigBase):
         self.full = dict(ArticleConfig._full.default)
         if site_config is not None:
             self.encoding = site_config.article_encoding
-            self.language = site_config.language
+            self.locale = site_config.locale
             self.author = site_config.author
             self.email = site_config.email
             self.enable_comments = site_config.enable_comments
