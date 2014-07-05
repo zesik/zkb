@@ -484,10 +484,10 @@ class DefaultSiteBuilder(SiteBuilder):
         for filename in self._package_resources:
             logger.info('Writing resource \'%s\'...' %
                         (self.config.url + filename))
-            stream = pkg_resources.resource_stream(
-                'zkb', 'templates/default/' + filename)
-            dest_filename = os.path.join(dest_dir, *filename.split('/'))
-            self.fileproc.write_stream(dest_filename, stream)
+            with pkg_resources.resource_stream(
+                    'zkb', 'templates/default/' + filename) as stream:
+                dest_filename = os.path.join(dest_dir, *filename.split('/'))
+                self.fileproc.write_stream(dest_filename, stream)
 
     def _do_build(self):
         self._add_path_info()
